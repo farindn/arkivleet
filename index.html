@@ -3,60 +3,92 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Play:wght@400;700&display=swap"
-      rel="stylesheet"
-    />
+    <title>Connected Car – Login</title>
+
+    <!-- 🎨 Stylesheet -->
+    <link rel="stylesheet" href="styles.css" />
+
+    <!-- 🚗 Favicon (Hatchback Car Icon) -->
     <link
       rel="icon"
-      href="https://cdn-icons-png.flaticon.com/256/8847/8847087.png"
+      href="https://cdn-icons-png.flaticon.com/512/1048/1048313.png"
       type="image/png"
     />
-    <title>Connected Car | Login</title>
-    <link rel="stylesheet" href="index-style.css" />
+
+    <!-- 🔤 Google Material Symbols -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded"
+      rel="stylesheet"
+    />
   </head>
   <body>
-    <div class="login-wrapper">
-      <div class="login-container">
-        <div class="logo">
-          <h1>Connected Car</h1>
-          <p class="powered-by">Powered by MyGeotab API</p>
-        </div>
-        <h2>Login</h2>
-        <div class="input-group">
-          <label for="username">Username</label>
-          <input
-            type="text"
-            id="username"
-            placeholder="Type your username"
-            required
-          />
-        </div>
-        <div class="input-group">
-          <label for="password">Password</label>
-          <input
-            type="password"
-            id="password"
-            placeholder="Type your password"
-            required
-          />
-        </div>
-        <div class="input-group">
-          <label for="database">Database</label>
-          <input
-            type="text"
-            id="database"
-            placeholder="Type your database"
-            required
-          />
-        </div>
-        <button id="loginBtn">Login</button>
+    <main class="login-page">
+      <div class="login-box">
+        <!-- 🚘 App Title & Subtitle -->
+        <h1 class="app-title">Connected Car</h1>
+        <p class="subtitle">Powered by Geotab</p>
+
+        <!-- 🔐 Login Form -->
+        <form class="login-form">
+          <!-- 👤 Username Field -->
+          <div class="input-group">
+            <label for="username">Username</label>
+            <div class="input-field">
+              <span class="material-symbols-rounded icon">person</span>
+              <input
+                id="username"
+                type="text"
+                placeholder="Enter your username"
+                required
+              />
+            </div>
+          </div>
+
+          <!-- 🗄️ Database Field -->
+          <div class="input-group">
+            <label for="database">Database</label>
+            <div class="input-field">
+              <span class="material-symbols-rounded icon">storage</span>
+              <input
+                id="database"
+                type="text"
+                placeholder="Enter your database"
+                required
+              />
+            </div>
+          </div>
+
+          <!-- 🔒 Password Field -->
+          <div class="input-group">
+            <label for="password">Password</label>
+            <div class="input-field">
+              <span class="material-symbols-rounded icon">lock</span>
+              <input
+                id="password"
+                type="password"
+                placeholder="Enter your password"
+                required
+              />
+            </div>
+          </div>
+
+          <!-- 🟦 Action Buttons -->
+          <button type="submit" class="btn-primary">Login</button>
+          <button type="button" class="btn-secondary">Register</button>
+        </form>
       </div>
-    </div>
-    <div id="notification" class="notification" style="display: none">
-      <span id="notificationText"></span>
-      <button id="closeBtn">&times;</button>
-    </div>
+
+      <!-- 📢 Toast Notification -->
+      <div id="toast" class="toast hidden"></div>
+
+      <!-- ⏳ Loading Spinner with Overlay -->
+      <div id="loader-overlay" class="loader-overlay hidden">
+        <div class="loader"></div>
+        <p class="loader-text">Logging in...</p>
+      </div>
+    </main>
+
+    <!-- 📜 Script -->
     <script src="script.js"></script>
   </body>
 </html>
