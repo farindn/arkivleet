@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Play:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="icon"
+      href="https://cdn-icons-png.flaticon.com/256/8847/8847087.png"
+      type="image/png"
+    />
+    <title>Connected Car | Login</title>
+    <link rel="stylesheet" href="index-style.css" />
+  </head>
+  <body>
+    <div class="login-wrapper">
+      <div class="login-container">
+        <div class="logo">
+          <h1>Connected Car</h1>
+          <p class="powered-by">Powered by MyGeotab API</p>
+        </div>
+        <h2>Login</h2>
+        <div class="input-group">
+          <label for="username">Username</label>
+          <input
+            type="text"
+            id="username"
+            placeholder="Type your username"
+            required
+          />
+        </div>
+        <div class="input-group">
+          <label for="password">Password</label>
+          <input
+            type="password"
+            id="password"
+            placeholder="Type your password"
+            required
+          />
+        </div>
+        <div class="input-group">
+          <label for="database">Database</label>
+          <input
+            type="text"
+            id="database"
+            placeholder="Type your database"
+            required
+          />
+        </div>
+        <button id="loginBtn">Login</button>
+      </div>
+    </div>
+    <div id="notification" class="notification" style="display: none">
+      <span id="notificationText"></span>
+      <button id="closeBtn">&times;</button>
+    </div>
+    <script src="script.js"></script>
+  </body>
+</html>
