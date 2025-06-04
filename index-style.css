@@ -1,0 +1,188 @@
+/* General Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Play", sans-serif; /* Updated Font */
+  background-color: #f1f1f1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+}
+
+/* Login Wrapper */
+.login-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+/* Login Container */
+.login-container {
+  background-color: #fff;
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.1);
+  max-width: 400px;
+  width: 100%;
+  position: relative;
+  text-align: left; /* Ensure form elements are left-aligned */
+}
+
+/* Logo */
+.logo {
+  text-align: center;
+  margin-bottom: 20px; /* Space between logo and form */
+}
+
+.logo h1 {
+  font-size: 2em;
+  font-weight: 700;
+  color: #063970;
+}
+
+/* Powered by Text */
+.powered-by {
+  font-size: 16px;
+  color: #555;
+  margin-top: 4px; /* Space above the powered by text */
+  margin-bottom: 4px;
+}
+
+/* Left-aligned Login Text */
+h2 {
+  margin-bottom: 30px;
+  font-size: 24px;
+  font-weight: 600;
+  color: #333;
+}
+
+/* Input Fields */
+.input-group {
+  margin-bottom: 20px;
+  text-align: left; /* Left-aligned labels */
+}
+
+label {
+  display: block;
+  font-size: 14px;
+  color: #555;
+  margin-bottom: 8px;
+}
+
+input {
+  width: 100%;
+  padding: 12px 15px;
+  font-size: 16px; /* Consistent font size */
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  outline: none;
+  background-color: #fafafa;
+  transition: border-color 0.3s;
+  font-family: "Play", sans-serif; /* Consistent font */
+}
+
+input::placeholder {
+  color: #aaa; /* Placeholder color */
+  opacity: 1; /* Firefox lowers the opacity of placeholder text */
+  font-size: 14px; /* Decrease placeholder size */
+}
+
+input:focus {
+  border-color: #063970;
+}
+
+/* Button */
+button {
+  width: 100%;
+  padding: 12px;
+  background-color: #063970;
+  border: none;
+  color: white;
+  font-size: 16px; /* Use the same font size as the input fields */
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  margin-top: 10px;
+  font-family: "Play", sans-serif; /* Ensure the button uses the same font */
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+/* Notification Popup */
+.notification {
+  position: fixed;
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
+  padding: 20px;
+  text-align: center;
+  z-index: 1000;
+}
+
+.notification.green {
+  border: 2px solid green; /* Green theme for success */
+}
+
+.notification.red {
+  border: 2px solid red; /* Red theme for failure */
+}
+
+.notification.blue {
+  border: 2px solid #063970;
+}
+
+#notificationText {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 16px;
+}
+
+/* Close Button */
+#closeBtn {
+  background: none;
+  color: black;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+/* Error Message */
+.error-message {
+  color: red;
+  text-align: center;
+  font-size: 14px;
+  margin-top: 10px;
+}
+
+/* Mobile Styling */
+@media (max-width: 500px) {
+  .login-container {
+    padding: 25px;
+  }
+
+  .logo h1 {
+    font-size: 2em;
+  }
+
+  h2 {
+    font-size: 22px;
+  }
+
+  input,
+  button {
+    font-size: 14px;
+  }
+}
