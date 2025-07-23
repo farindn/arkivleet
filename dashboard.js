@@ -169,14 +169,23 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /**
-   * 🔥 Determines the ignition state with improved logic.
+   * Determines the ignition state with improved logic.
    * @returns {'ON' | 'OFF' | 'UNKNOWN'}
    */
   function getIgnitionState(status) {
+    // Rule: If the vehicle is driving, the ignition must be ON.
+    if (status.isDriving) {
+      return 'ON';
+    }
+  
+    // Original logic follows if the vehicle is not driving.
     if (!status.isDeviceCommunicating) return 'UNKNOWN';
+    
     const ignitionDiagnostic = status.diagnostics?.find(d => d.diagnostic.id === "DiagnosticIgnitionId");
     if (!ignitionDiagnostic) return 'UNKNOWN';
+    
     const isFresh = (new Date() - new Date(ignitionDiagnostic.dateTime)) < 5 * 60 * 1000; // 5 minute freshness window
+    
     return ignitionDiagnostic.data === 1 && isFresh ? 'ON' : 'OFF';
   }
 
