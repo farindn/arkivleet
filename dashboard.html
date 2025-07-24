@@ -52,13 +52,6 @@
     <!-- 📈 Section: Summary Cards -->
     <section class="dashboard-cards">
       <div class="card">
-        <span class="material-symbols-rounded">directions_car</span>
-        <div>
-          <p>Total Vehicles</p>
-          <strong class="stat-number" id="card-total">0</strong>
-        </div>
-      </div>
-      <div class="card">
         <span class="material-symbols-rounded">wifi</span>
         <div>
           <p>Communication</p>
@@ -72,11 +65,10 @@
           <strong class="stat-number" id="card-driving">0</strong>
         </div>
       </div>
-      <div class="card">
-        <span class="material-symbols-rounded">power</span>
+      <div class="card"> <span class="material-symbols-rounded">timer</span>
         <div>
-          <p>Ignition</p>
-          <strong class="stat-number" id="card-ignition">0</strong>
+          <p>Idling</p>
+          <strong class="stat-number" id="card-idling">0</strong>
         </div>
       </div>
     </section>
@@ -99,7 +91,7 @@
               <th class="sortable" data-column="name">Name <span class="sort-icon"></span></th>
               <th class="sortable" data-column="vehicleIdentificationNumber">VIN <span class="sort-icon"></span></th>
               <th class="sortable" data-column="serialNumber">Serial <span class="sort-icon"></span></th>
-              <th>Ignition</th> <th>Is Driving</th>
+              <th>Driving</th> <th>Is Idling</th>
             </tr>
           </thead>
           <tbody id="vehicle-table-body"></tbody>
