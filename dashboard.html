@@ -5,31 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Connected Car – Dashboard</title>
 
-  <!-- 🎨 Styles -->
   <link rel="stylesheet" href="styles.css" />
 
-  <!-- 🔤 Google Material Symbols -->
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded" rel="stylesheet" />
 
-  <!-- 🚗 Favicon (Hatchback icon) -->
   <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/1048/1048313.png" type="image/png" />
 
-  <!-- 🕶️ Optional quick style for hiding main on load -->
   <style>
     body > main.hidden { display: none; }
   </style>
 </head>
 <body>
-  <!-- ⏳ Loader Overlay -->
   <div class="loader-overlay hidden" id="loader-overlay">
     <div class="loader"></div>
     <div class="loader-text">Loading dashboard...</div>
   </div>
 
-  <!-- 📢 Toast Notification -->
   <div class="toast hidden" id="toast"></div>
 
-  <!-- 🧑 Navbar with user info and dropdown -->
   <header class="navbar">
     <div class="user-area" id="userArea">
       <span class="material-symbols-rounded user-icon">account_circle</span>
@@ -44,13 +37,17 @@
     </div>
   </header>
 
-  <!-- 📊 Dashboard Container -->
   <main class="dashboard hidden" id="dashboardContent">
-    <!-- 📌 Section: Title -->
     <h1 class="section-title">Dashboard</h1>
 
-    <!-- 📈 Section: Summary Cards -->
     <section class="dashboard-cards">
+      <div class="card">
+        <span class="material-symbols-rounded">directions_car</span>
+        <div>
+          <p>Total Vehicles</p>
+          <strong class="stat-number" id="card-total">0</strong>
+        </div>
+      </div>
       <div class="card">
         <span class="material-symbols-rounded">wifi</span>
         <div>
@@ -65,7 +62,8 @@
           <strong class="stat-number" id="card-driving">0</strong>
         </div>
       </div>
-      <div class="card"> <span class="material-symbols-rounded">timer</span>
+      <div class="card">
+        <span class="material-symbols-rounded">timer</span>
         <div>
           <p>Idling</p>
           <strong class="stat-number" id="card-idling">0</strong>
@@ -73,17 +71,14 @@
       </div>
     </section>
 
-    <!-- 🧾 Section: Vehicle List Table -->
     <section class="dashboard-table">
       <h2 class="section-title">Vehicle List</h2>
 
-      <!-- 🔍 Search Bar -->
       <div class="search-bar">
         <input type="text" id="searchInput" placeholder="Search..." />
         <span class="material-symbols-rounded search-icon">search</span>
       </div>
 
-      <!-- 📋 Table -->
       <div class="table-wrapper">
         <table>
           <thead>
@@ -91,14 +86,14 @@
               <th class="sortable" data-column="name">Name <span class="sort-icon"></span></th>
               <th class="sortable" data-column="vehicleIdentificationNumber">VIN <span class="sort-icon"></span></th>
               <th class="sortable" data-column="serialNumber">Serial <span class="sort-icon"></span></th>
-              <th>Driving</th> <th>Is Idling</th>
+              <th>Driving</th>
+              <th>Idling</th>
             </tr>
           </thead>
           <tbody id="vehicle-table-body"></tbody>
         </table>
       </div>
 
-      <!-- 🔁 Pagination Controls -->
       <div class="pagination">
         <button id="prevPage" disabled>Previous</button>
         <button id="nextPage">Next</button>
@@ -106,7 +101,7 @@
     </section>
   </main>
 
-  <!-- 🧠 Dashboard Logic -->
-  <script src="utils.js"></script> <script src="dashboard.js"></script>
+  <script src="utils.js"></script>
+  <script src="dashboard.js"></script>
 </body>
 </html>
