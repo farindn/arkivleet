@@ -173,22 +173,26 @@ document.addEventListener("DOMContentLoaded", () => {
    * @returns {'ON' | 'OFF' | 'UNKNOWN'}
    */
   function getIgnitionState(status) {
-    // Rule: If the vehicle is driving, the ignition must be ON.
+    // Rule: If the vehicle is driving, ignition is ON.
     if (status.isDriving) {
       return 'ON';
     }
   
-    // Original logic follows if the vehicle is not driving.
-    if (!status.isDeviceCommunicating) return 'UNKNOWN';
-    
+    // Find the ignition diagnostic from the API response.
     const ignitionDiagnostic = status.diagnostics?.find(d => d.diagnostic.id === "DiagnosticIgnitionId");
-    if (!ignitionDiagnostic) return 'UNKNOWN';
-    
-    const isFresh = (new Date() - new Date(ignitionDiagnostic.dateTime)) < 5 * 60 * 1000; // 5 minute freshness window
-    
+  
+    // If no ignition data is available at all, default to OFF.
+    if (!ignitionDiagnostic) {
+      return 'OFF';
+    }
+  
+    // Check if the reading is recent (within 5 minutes) to prevent very stale data.
+    const isFresh = (new Date() - new Date(ignitionDiagnostic.dateTime)) < 5 * 60 * 1000;
+  
+    // Return ON if the data is 1 and the reading is fresh, otherwise OFF.
     return ignitionDiagnostic.data === 1 && isFresh ? 'ON' : 'OFF';
   }
-
+    
   /**
    * ✨ Creates a display element for the ignition state.
    */
