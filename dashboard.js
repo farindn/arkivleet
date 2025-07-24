@@ -1,5 +1,3 @@
-// 🧠 /dashboard.js (Complete Rewrite)
-
 document.addEventListener("DOMContentLoaded", () => {
   // --- STATE MANAGEMENT ---
   const credentials = {
@@ -93,25 +91,25 @@ document.addEventListener("DOMContentLoaded", () => {
           typeName: "DeviceStatusInfo",
           search: { diagnostics: [{ id: "DiagnosticIgnitionId" }] }
       }, credentials);
-  
+
       let drivingCount = 0;
       let idlingCount = 0;
-  
+
       statusInfo.forEach(status => {
         const state = getVehicleState(status);
         if (state.isDriving) drivingCount++;
         if (state.isIdling) idlingCount++;
       });
-  
+
       document.getElementById("card-comm").textContent = statusInfo.filter(s => s.isDeviceCommunicating).length;
       document.getElementById("card-driving").textContent = drivingCount;
-      document.getElementById("card-idling").textContent = idlingCount; // Updated ID
+      document.getElementById("card-idling").textContent = idlingCount;
+
     } catch(err) {
         console.error("Could not load fleet summary:", err);
         showToast("Could not load fleet summary cards.", "error");
     }
   }
-
 
   /**
    * 📖 Renders a specific page of the vehicle table.
@@ -120,14 +118,36 @@ document.addEventListener("DOMContentLoaded", () => {
   async function renderTablePage(page) {
     showLoader();
     try {
-      // ... (top part of the function remains the same) ...
+      const filteredDevices = getFilteredAndSortedDevices();
+      const pageInfo = {
+        totalItems: filteredDevices.length,
+        totalPages: Math.ceil(filteredDevices.length / rowsPerPage),
+        currentPage: page
+      };
       
+      const start = (page - 1) * rowsPerPage;
+      const end = start + rowsPerPage;
+      const pageDevices = filteredDevices.slice(start, end);
+      
+      if (pageDevices.length === 0) {
+        document.getElementById("vehicle-table-body").innerHTML = `<tr><td colspan="5">No vehicles found.</td></tr>`;
+        updatePaginationControls(pageInfo);
+        return;
+      }
+
+      const deviceIds = pageDevices.map(d => ({ id: d.id }));
+      const statusList = await fetchFromGeotab("Get", {
+          typeName: "DeviceStatusInfo",
+          search: { deviceSearch: { ids: deviceIds }, diagnostics: [{id: "DiagnosticIgnitionId"}] }
+      }, credentials);
+      const statusMap = Object.fromEntries(statusList.map(s => [s.device.id, s]));
+
       const tableBody = document.getElementById("vehicle-table-body");
       tableBody.innerHTML = ""; // Clear previous content
       pageDevices.forEach(device => {
         const status = statusMap[device.id] || {};
         const state = getVehicleState(status); // Use our new helper
-  
+
         const row = document.createElement("tr");
         row.classList.add("fade-in");
         row.innerHTML = `
@@ -150,57 +170,42 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /**
-   * Determines the ignition state with improved logic.
-   * @returns {'ON' | 'OFF' | 'UNKNOWN'}
+   * 🔥 Determines the ignition state based solely on its diagnostic.
+   * @returns {'ON' | 'OFF'}
    */
   function getIgnitionState(status) {
     // Rule: If the vehicle is driving, ignition is ON.
     if (status.isDriving) {
       return 'ON';
     }
-  
     // Find the ignition diagnostic from the API response.
     const ignitionDiagnostic = status.diagnostics?.find(d => d.diagnostic.id === "DiagnosticIgnitionId");
-  
     // If no ignition data is available at all, default to OFF.
     if (!ignitionDiagnostic) {
       return 'OFF';
     }
-  
-    // Check if the reading is recent (within 5 minutes) to prevent very stale data.
+    // Check if the reading is recent (within 5 minutes).
     const isFresh = (new Date() - new Date(ignitionDiagnostic.dateTime)) < 5 * 60 * 1000;
-  
     // Return ON if the data is 1 and the reading is fresh, otherwise OFF.
     return ignitionDiagnostic.data === 1 && isFresh ? 'ON' : 'OFF';
   }
 
   /**
- * Determines the driving and idling state of a vehicle based on its status.
- * @param {object} status The DeviceStatusInfo object.
- * @returns {{isDriving: boolean, isIdling: boolean}}
- */
+   * 🚚 Determines the driving and idling state of a vehicle based on its status.
+   * @param {object} status The DeviceStatusInfo object.
+   * @returns {{isDriving: boolean, isIdling: boolean}}
+   */
   function getVehicleState(status) {
     // A device must be communicating to be considered driving or idling.
     if (!status.isDeviceCommunicating) {
       return { isDriving: false, isIdling: false };
     }
-  
     const isDriving = status.isDriving;
     // Use our existing ignition logic to check if the ignition is on.
     const ignitionOn = getIgnitionState(status) === 'ON';
     // A vehicle is idling if its ignition is ON and it is NOT driving.
     const isIdling = ignitionOn && !isDriving;
-  
     return { isDriving, isIdling };
-  }
-    
-  /**
-   * ✨ Creates a display element for the ignition state.
-   */
-  function getIgnitionStateDisplay(state) {
-      const colorMap = { ON: 'green', OFF: 'red', UNKNOWN: 'grey' };
-      const iconMap = { ON: 'power', OFF: 'power_off', UNKNOWN: 'question_mark'};
-      return `<span class="material-symbols-rounded" style="color:${colorMap[state]}; vertical-align: middle;">${iconMap[state]}</span> ${state}`;
   }
 
   /**
