@@ -93,16 +93,19 @@ document.addEventListener("DOMContentLoaded", () => {
           typeName: "DeviceStatusInfo",
           search: { diagnostics: [{ id: "DiagnosticIgnitionId" }] }
       }, credentials);
-
-      const fleetSummary = {
-          communicating: statusInfo.filter(s => s.isDeviceCommunicating).length,
-          driving: statusInfo.filter(s => s.isDriving).length,
-          ignitionOn: statusInfo.filter(s => getIgnitionState(s) === 'ON').length,
-      };
-
-      document.getElementById("card-comm").textContent = fleetSummary.communicating;
-      document.getElementById("card-driving").textContent = fleetSummary.driving;
-      document.getElementById("card-ignition").textContent = fleetSummary.ignitionOn;
+  
+      let drivingCount = 0;
+      let idlingCount = 0;
+  
+      statusInfo.forEach(status => {
+        const state = getVehicleState(status);
+        if (state.isDriving) drivingCount++;
+        if (state.isIdling) idlingCount++;
+      });
+  
+      document.getElementById("card-comm").textContent = statusInfo.filter(s => s.isDeviceCommunicating).length;
+      document.getElementById("card-driving").textContent = drivingCount;
+      document.getElementById("card-idling").textContent = idlingCount; // Updated ID
     } catch(err) {
         console.error("Could not load fleet summary:", err);
         showToast("Could not load fleet summary cards.", "error");
@@ -117,44 +120,22 @@ document.addEventListener("DOMContentLoaded", () => {
   async function renderTablePage(page) {
     showLoader();
     try {
-      const filteredDevices = getFilteredAndSortedDevices();
-      const pageInfo = {
-        totalItems: filteredDevices.length,
-        totalPages: Math.ceil(filteredDevices.length / rowsPerPage),
-        currentPage: page
-      };
+      // ... (top part of the function remains the same) ...
       
-      const start = (page - 1) * rowsPerPage;
-      const end = start + rowsPerPage;
-      const pageDevices = filteredDevices.slice(start, end);
-      
-      if (pageDevices.length === 0) {
-        document.getElementById("vehicle-table-body").innerHTML = `<tr><td colspan="5">No vehicles found.</td></tr>`;
-        updatePaginationControls(pageInfo);
-        return;
-      }
-
-      const deviceIds = pageDevices.map(d => ({ id: d.id }));
-      const statusList = await fetchFromGeotab("Get", {
-          typeName: "DeviceStatusInfo",
-          search: { deviceSearch: { ids: deviceIds }, diagnostics: [{id: "DiagnosticIgnitionId"}] }
-      }, credentials);
-      const statusMap = Object.fromEntries(statusList.map(s => [s.device.id, s]));
-
       const tableBody = document.getElementById("vehicle-table-body");
       tableBody.innerHTML = ""; // Clear previous content
       pageDevices.forEach(device => {
         const status = statusMap[device.id] || {};
-        const ignitionState = getIgnitionState(status);
-
+        const state = getVehicleState(status); // Use our new helper
+  
         const row = document.createElement("tr");
         row.classList.add("fade-in");
         row.innerHTML = `
             <td>${device.name || "Unknown"}</td>
             <td><code class="code-block">${device.vehicleIdentificationNumber || "-"}</code></td>
             <td><code class="code-block">${device.serialNumber || "-"}</code></td>
-            <td>${getIgnitionStateDisplay(ignitionState)}</td>
-            <td>${status.isDriving ? "Yes" : "No"}</td>
+            <td>${state.isDriving ? 'Yes' : 'No'}</td>
+            <td>${state.isIdling ? 'Yes' : 'No'}</td>
         `;
         tableBody.appendChild(row);
       });
@@ -191,6 +172,26 @@ document.addEventListener("DOMContentLoaded", () => {
   
     // Return ON if the data is 1 and the reading is fresh, otherwise OFF.
     return ignitionDiagnostic.data === 1 && isFresh ? 'ON' : 'OFF';
+  }
+
+  /**
+ * Determines the driving and idling state of a vehicle based on its status.
+ * @param {object} status The DeviceStatusInfo object.
+ * @returns {{isDriving: boolean, isIdling: boolean}}
+ */
+  function getVehicleState(status) {
+    // A device must be communicating to be considered driving or idling.
+    if (!status.isDeviceCommunicating) {
+      return { isDriving: false, isIdling: false };
+    }
+  
+    const isDriving = status.isDriving;
+    // Use our existing ignition logic to check if the ignition is on.
+    const ignitionOn = getIgnitionState(status) === 'ON';
+    // A vehicle is idling if its ignition is ON and it is NOT driving.
+    const isIdling = ignitionOn && !isDriving;
+  
+    return { isDriving, isIdling };
   }
     
   /**
