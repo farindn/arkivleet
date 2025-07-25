@@ -223,13 +223,14 @@ document.addEventListener("DOMContentLoaded", () => {
             <td><code class="code-block">${device.vehicleIdentificationNumber || "-"}</code></td>
             <td><code class="code-block">${device.serialNumber || "-"}</code></td>
             <td>${status.isDriving ? 'Yes' : 'No'}</td>
-            <td>${distanceToday.toFixed(2)}</td>
+            <td><code class="code-block">${distanceToday.toFixed(2)}</code></td>
         `;
         tableBody.appendChild(row);
       });
       
       updatePaginationControls(pageInfo);
-    } catch (err) {
+    } catch (err)
+ {
       console.error(`Error rendering page ${page}:`, err);
       showToast("Could not load vehicle data for this page.", "error");
     } finally {
@@ -303,7 +304,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     filtered.sort((a, b) => {
         const valA = a[currentSortConfig.column]?.toLowerCase?.() || a[currentSortConfig.column] || "";
-        const valB = b[currentSortConfig.column]?.toLowerCase?.() || b[currentSortConfig.column] || "";
+        const valB = b[currentSortConfig.column]?.toLowerCase?.() || b[currentSortCofig.column] || "";
         if (valA < valB) return currentSortConfig.direction === 'asc' ? -1 : 1;
         if (valA > valB) return currentSortConfig.direction === 'asc' ? 1 : -1;
         return 0;
