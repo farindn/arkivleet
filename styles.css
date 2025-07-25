@@ -579,4 +579,12 @@ th.sortable {
   .dashboard-table td:nth-child(5) {
     display: none;
   }
+
+  /* ✨ Disable horizontal scroll and fit table to screen */
+  .table-wrapper {
+    overflow-x: initial;
+  }
+  .dashboard-table table {
+    min-width: 100%;
+  }
 }
