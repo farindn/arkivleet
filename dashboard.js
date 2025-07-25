@@ -99,37 +99,36 @@ document.addEventListener("DOMContentLoaded", () => {
    * @returns {{fromDate: string, toDate: string}} The UTC date strings.
    */
   function getDateRangeInUTCForToday(timeZoneId) {
-    // Get the current date and time parts in the target timezone
+    // 1. Get the current date parts in the target timezone using 'en-CA' format (YYYY-MM-DD).
     const now = new Date();
-    const parts = new Intl.DateTimeFormat("en-US", {
+    const parts = new Intl.DateTimeFormat("en-CA", { timeZone: timeZoneId }).formatToParts(now);
+    const { year, month, day } = parts.reduce((acc, p) => ({ ...acc, [p.type]: p.value }), {});
+
+    // 2. Create a string for midnight on that day and an anchor date object from it.
+    const midnightString = `${year}-${month}-${day}T00:00:00`;
+    const anchorDate = new Date(midnightString + "Z"); // Treat as UTC to create a solid anchor point in time.
+    
+    // 3. Find the hour for that anchor point in the target timezone.
+    const hourInZone = new Intl.DateTimeFormat("en-US", {
       timeZone: timeZoneId,
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      hour12: false,
-    }).formatToParts(now);
+      hour: "numeric",
+      hourCycle: "h23", // Use 24-hour format (00-23)
+    }).format(anchorDate);
 
-    const dateParts = parts.reduce((acc, part) => {
-      acc[part.type] = part.value;
-      return acc;
-    }, {});
+    // 4. The offset is the difference between UTC's midnight hour (0) and the hour in the target zone.
+    const offsetInHours = 0 - parseInt(hourInZone, 10);
 
-    // Create the start of day string for that timezone.
-    const startOfDayInZone = new Date(`${dateParts.year}-${dateParts.month}-${dateParts.day}T00:00:00`);
-    
-    // A trick to correctly get the UTC equivalent of a date in a specific timezone.
-    // We calculate the offset between the browser's local time and the target timezone's time.
-    const localOffset = now.getTimezoneOffset() * 60000;
-    const targetDate = new Date(now.toLocaleString("en-US", { timeZone: timeZoneId }));
-    const targetOffset = (now.getTime() - targetDate.getTime()) - localOffset;
-    
-    const fromDate = new Date(startOfDayInZone.getTime() - targetOffset).toISOString();
-    const toDate = new Date(startOfDayInZone.getTime() - targetOffset + (24 * 60 * 60 * 1000 - 1)).toISOString();
+    // 5. Create the correct start date in UTC by applying the offset to our anchor.
+    const fromDate = new Date(anchorDate);
+    fromDate.setUTCHours(fromDate.getUTCHours() + offsetInHours);
 
-    return { fromDate, toDate };
+    // 6. The end date is 24 hours later, minus one millisecond.
+    const toDate = new Date(fromDate.getTime() + (24 * 60 * 60 * 1000 - 1));
+
+    return { 
+      fromDate: fromDate.toISOString(), 
+      toDate: toDate.toISOString() 
+    };
   }
 
   /**
@@ -229,8 +228,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       
       updatePaginationControls(pageInfo);
-    } catch (err)
- {
+    } catch (err) {
       console.error(`Error rendering page ${page}:`, err);
       showToast("Could not load vehicle data for this page.", "error");
     } finally {
@@ -304,7 +302,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     filtered.sort((a, b) => {
         const valA = a[currentSortConfig.column]?.toLowerCase?.() || a[currentSortConfig.column] || "";
-        const valB = b[currentSortConfig.column]?.toLowerCase?.() || b[currentSortCofig.column] || "";
+        const valB = b[currentSortConfig.column]?.toLowerCase?.() || b[currentSortConfig.column] || "";
         if (valA < valB) return currentSortConfig.direction === 'asc' ? -1 : 1;
         if (valA > valB) return currentSortConfig.direction === 'asc' ? 1 : -1;
         return 0;
