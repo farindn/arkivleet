@@ -7,6 +7,7 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   let allDevices = []; // Full list of devices, fetched once.
+  let dailyTripData = new Map(); // Stores total distance per device ID.
   let currentSortConfig = { column: "name", direction: "asc" };
   let currentSearchTerm = "";
   const rowsPerPage = 10;
@@ -16,30 +17,30 @@ document.addEventListener("DOMContentLoaded", () => {
 
   /**
    * 🚀 Main function to initialize the dashboard.
-   * It validates the session, fetches initial data, and sets up event listeners.
    */
   async function initializeDashboard() {
-    // 🔐 Validate session
     if (!credentials.sessionId) {
       showToast("Session expired. Please log in again.", "error");
       setTimeout(() => (window.location.href = "index.html"), 2000);
       return;
     }
 
-    // 🧑‍💻 Populate user info and set up navbar logout
     setupNavbar();
     showLoader();
 
     try {
-      // 1. Fetch all devices first for a complete list.
-      allDevices = await fetchFromGeotab("Get", { typeName: "Device" }, credentials);
+      // 1. Fetch all devices and daily trip data concurrently.
+      [allDevices, dailyTripData] = await Promise.all([
+        fetchFromGeotab("Get", { typeName: "Device" }, credentials),
+        loadDailyTripData()
+      ]);
       document.getElementById("card-total").textContent = allDevices.length;
       
-      // 2. Setup table controls (search, sort, pagination) and render the first page.
+      // 2. Setup table and render the first page.
       setupTableControls();
       await renderTablePage(1);
 
-      // 3. Asynchronously load fleet-wide summary data for the cards.
+      // 3. Asynchronously load fleet-wide summary data.
       loadFleetSummary();
 
     } catch (err) {
@@ -82,29 +83,47 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   
   /**
+   * 🚗 Fetches and aggregates trip data for the current day.
+   * @returns {Promise<Map<string, number>>} A map of device IDs to their total distance.
+   */
+  async function loadDailyTripData() {
+    const today = new Date();
+    const fromDate = new Date(today.setUTCHours(0, 0, 0, 0)).toISOString();
+    const toDate = new Date(today.setUTCHours(23, 59, 59, 999)).toISOString();
+
+    const trips = await fetchFromGeotab("Get", {
+      typeName: "Trip",
+      search: { fromDate, toDate }
+    }, credentials);
+
+    const distanceByDevice = new Map();
+    for (const trip of trips) {
+      const deviceId = trip.device.id;
+      const currentDistance = distanceByDevice.get(deviceId) || 0;
+      distanceByDevice.set(deviceId, currentDistance + trip.distance);
+    }
+    return distanceByDevice;
+  }
+
+  /**
    * 📈 Asynchronously fetches status for the entire fleet to update summary cards.
-   * This runs in the background and does not block the UI.
    */
   async function loadFleetSummary() {
     try {
-      const statusInfo = await fetchFromGeotab("Get", {
-          typeName: "DeviceStatusInfo",
-          search: { diagnostics: [{ id: "DiagnosticIgnitionId" }] }
-      }, credentials);
+      const statusInfo = await fetchFromGeotab("Get", { typeName: "DeviceStatusInfo" }, credentials);
+      const communicatingDevices = statusInfo.filter(s => s.isDeviceCommunicating);
+      
+      let lessUtilizedCount = 0;
+      for (const device of communicatingDevices) {
+        const distance = dailyTripData.get(device.device.id) || 0;
+        if (distance < 10) {
+          lessUtilizedCount++;
+        }
+      }
 
-      let drivingCount = 0;
-      let idlingCount = 0;
-
-      statusInfo.forEach(status => {
-        const state = getVehicleState(status);
-        if (state.isDriving) drivingCount++;
-        if (state.isIdling) idlingCount++;
-      });
-
-      document.getElementById("card-comm").textContent = statusInfo.filter(s => s.isDeviceCommunicating).length;
-      document.getElementById("card-driving").textContent = drivingCount;
-      document.getElementById("card-idling").textContent = idlingCount;
-
+      document.getElementById("card-comm").textContent = communicatingDevices.length;
+      document.getElementById("card-driving").textContent = statusInfo.filter(s => s.isDriving).length;
+      document.getElementById("card-less-utilized").textContent = lessUtilizedCount;
     } catch(err) {
         console.error("Could not load fleet summary:", err);
         showToast("Could not load fleet summary cards.", "error");
@@ -113,7 +132,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   /**
    * 📖 Renders a specific page of the vehicle table.
-   * @param {number} page The page number to render.
    */
   async function renderTablePage(page) {
     showLoader();
@@ -138,15 +156,15 @@ document.addEventListener("DOMContentLoaded", () => {
       const deviceIds = pageDevices.map(d => ({ id: d.id }));
       const statusList = await fetchFromGeotab("Get", {
           typeName: "DeviceStatusInfo",
-          search: { deviceSearch: { ids: deviceIds }, diagnostics: [{id: "DiagnosticIgnitionId"}] }
+          search: { deviceSearch: { ids: deviceIds } }
       }, credentials);
       const statusMap = Object.fromEntries(statusList.map(s => [s.device.id, s]));
 
       const tableBody = document.getElementById("vehicle-table-body");
-      tableBody.innerHTML = ""; // Clear previous content
+      tableBody.innerHTML = "";
       pageDevices.forEach(device => {
         const status = statusMap[device.id] || {};
-        const state = getVehicleState(status); // Use our new helper
+        const distanceToday = dailyTripData.get(device.id) || 0;
 
         const row = document.createElement("tr");
         row.classList.add("fade-in");
@@ -154,8 +172,8 @@ document.addEventListener("DOMContentLoaded", () => {
             <td>${device.name || "Unknown"}</td>
             <td><code class="code-block">${device.vehicleIdentificationNumber || "-"}</code></td>
             <td><code class="code-block">${device.serialNumber || "-"}</code></td>
-            <td>${state.isDriving ? 'Yes' : 'No'}</td>
-            <td>${state.isIdling ? 'Yes' : 'No'}</td>
+            <td>${status.isDriving ? 'Yes' : 'No'}</td>
+            <td>${distanceToday.toFixed(2)}</td>
         `;
         tableBody.appendChild(row);
       });
@@ -170,52 +188,13 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /**
-   * 🔥 Determines the ignition state based solely on its diagnostic.
-   * @returns {'ON' | 'OFF'}
-   */
-  function getIgnitionState(status) {
-    // Rule: If the vehicle is driving, ignition is ON.
-    if (status.isDriving) {
-      return 'ON';
-    }
-    // Find the ignition diagnostic from the API response.
-    const ignitionDiagnostic = status.diagnostics?.find(d => d.diagnostic.id === "DiagnosticIgnitionId");
-    // If no ignition data is available at all, default to OFF.
-    if (!ignitionDiagnostic) {
-      return 'OFF';
-    }
-    // Check if the reading is recent (within 5 minutes).
-    const isFresh = (new Date() - new Date(ignitionDiagnostic.dateTime)) < 5 * 60 * 1000;
-    // Return ON if the data is 1 and the reading is fresh, otherwise OFF.
-    return ignitionDiagnostic.data === 1 && isFresh ? 'ON' : 'OFF';
-  }
-
-  /**
-   * 🚚 Determines the driving and idling state of a vehicle based on its status.
-   * @param {object} status The DeviceStatusInfo object.
-   * @returns {{isDriving: boolean, isIdling: boolean}}
-   */
-  function getVehicleState(status) {
-    // A device must be communicating to be considered driving or idling.
-    if (!status.isDeviceCommunicating) {
-      return { isDriving: false, isIdling: false };
-    }
-    const isDriving = status.isDriving;
-    // Use our existing ignition logic to check if the ignition is on.
-    const ignitionOn = getIgnitionState(status) === 'ON';
-    // A vehicle is idling if its ignition is ON and it is NOT driving.
-    const isIdling = ignitionOn && !isDriving;
-    return { isDriving, isIdling };
-  }
-
-  /**
    * 🎛️ Sets up event listeners for search, sort, and pagination.
    */
   function setupTableControls() {
     // Search
     document.getElementById("searchInput").addEventListener("input", (e) => {
         currentSearchTerm = e.target.value;
-        renderTablePage(1); // Go back to page 1 on new search
+        renderTablePage(1);
     });
     // Sorting
     document.querySelectorAll("th.sortable").forEach(header => {
@@ -246,7 +225,6 @@ document.addEventListener("DOMContentLoaded", () => {
     prevBtn.disabled = currentPage <= 1;
     nextBtn.disabled = currentPage >= totalPages;
 
-    // Clone and replace to remove old event listeners
     const newPrevBtn = prevBtn.cloneNode(true);
     prevBtn.parentNode.replaceChild(newPrevBtn, prevBtn);
     const newNextBtn = nextBtn.cloneNode(true);
@@ -264,7 +242,6 @@ document.addEventListener("DOMContentLoaded", () => {
    * 📦 Returns a filtered and sorted list of devices based on current state.
    */
   function getFilteredAndSortedDevices() {
-    // Filter
     let filtered = [...allDevices];
     if (currentSearchTerm) {
       const lowercasedTerm = currentSearchTerm.toLowerCase();
@@ -274,7 +251,6 @@ document.addEventListener("DOMContentLoaded", () => {
         (d.serialNumber || "").toLowerCase().includes(lowercasedTerm)
       );
     }
-    // Sort
     filtered.sort((a, b) => {
         const valA = a[currentSortConfig.column]?.toLowerCase?.() || a[currentSortConfig.column] || "";
         const valB = b[currentSortConfig.column]?.toLowerCase?.() || b[currentSortConfig.column] || "";
