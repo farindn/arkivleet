@@ -8,11 +8,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let allDevices = [];
   let dailyTripData = new Map();
-  let selectedTimeZone = 'UTC'; // Default timezone
+  let userTimeZoneId = "UTC"; // Default to UTC
   let currentSortConfig = { column: "name", direction: "asc" };
   let currentSearchTerm = "";
   const rowsPerPage = 10;
-  let timezoneSelect; // To hold the Choices.js instance
 
   // --- INITIALIZATION ---
   initializeDashboard();
@@ -28,39 +27,39 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     setupNavbar();
-    setupTimezoneSelector();
-    
-    // Fetch device list once, as it's static.
-    allDevices = await fetchFromGeotab("Get", { typeName: "Device" }, credentials);
-    document.getElementById("card-total").textContent = allDevices.length;
-    
-    setupTableControls();
-    
-    // Initial data load using the default timezone.
-    await reloadData();
-    
-    document.getElementById("dashboardContent").classList.remove("hidden");
-  }
-  
-  /**
-   * 🔄 Reloads all dynamic data based on the currently selected timezone.
-   */
-  async function reloadData() {
     showLoader();
+
     try {
-      // 1. Fetch daily trip data for the selected timezone.
-      dailyTripData = await loadDailyTripData();
+      // 1. Fetch user's timezone first.
+      const userResult = await fetchFromGeotab("Get", {
+        typeName: "User",
+        search: { name: credentials.userName },
+      }, credentials);
+      if (userResult[0]?.timeZoneId) {
+        userTimeZoneId = userResult[0].timeZoneId;
+      }
+      document.getElementById("user-timezone").textContent = userTimeZoneId;
+
+      // 2. Fetch all devices and daily trip data concurrently, using the new timezone.
+      [allDevices, dailyTripData] = await Promise.all([
+        fetchFromGeotab("Get", { typeName: "Device" }, credentials),
+        loadDailyTripData(userTimeZoneId),
+      ]);
+      document.getElementById("card-total").textContent = allDevices.length;
       
-      // 2. Render the first page of the table with the new data.
+      // 3. Setup table and render the first page.
+      setupTableControls();
       await renderTablePage(1);
 
-      // 3. Asynchronously update the summary cards.
+      // 4. Asynchronously load fleet-wide summary data.
       loadFleetSummary();
+
     } catch (err) {
-      console.error("Error reloading data:", err);
-      showToast("Failed to reload data for the selected timezone.", "error");
+      console.error("Error initializing dashboard:", err);
+      showToast("Failed to load dashboard data.", "error");
     } finally {
       hideLoader();
+      document.getElementById("dashboardContent").classList.remove("hidden");
     }
   }
 
@@ -85,50 +84,62 @@ document.addEventListener("DOMContentLoaded", () => {
   function setupNavbar() {
     document.getElementById("user-email").textContent = credentials.userName;
     document.getElementById("user-db").textContent = credentials.database;
-    document.getElementById("userArea").addEventListener("click", () => {
-        document.getElementById("dropdownMenu").classList.toggle("hidden");
-    });
+    const userArea = document.getElementById("userArea");
+    const dropdown = document.getElementById("dropdownMenu");
+    userArea.addEventListener("click", () => dropdown.classList.toggle("hidden"));
     document.getElementById("logoutBtn").addEventListener("click", () => {
       sessionStorage.clear();
       window.location.href = "index.html";
     });
   }
-
+  
   /**
-   * 🌍 Sets up the timezone selector dropdown.
+   * 📅 Calculates the start and end of "today" in UTC based on the user's timezone.
+   * @param {string} timeZoneId The IANA timezone ID (e.g., "Asia/Jakarta").
+   * @returns {{fromDate: string, toDate: string}} The UTC date strings.
    */
-  function setupTimezoneSelector() {
-    const selector = document.getElementById('timezone-selector');
-    const timezones = Intl.supportedValuesOf('timeZone');
+  function getDateRangeInUTCForToday(timeZoneId) {
+    // Get the current date and time parts in the target timezone
+    const now = new Date();
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZone: timeZoneId,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    }).formatToParts(now);
+
+    const dateParts = parts.reduce((acc, part) => {
+      acc[part.type] = part.value;
+      return acc;
+    }, {});
+
+    // Create the start of day string for that timezone.
+    const startOfDayInZone = new Date(`${dateParts.year}-${dateParts.month}-${dateParts.day}T00:00:00`);
     
-    timezones.forEach(tz => {
-        const option = document.createElement('option');
-        option.value = tz;
-        option.textContent = tz.replace(/_/g, ' ');
-        if (tz === selectedTimeZone) {
-            option.selected = true;
-        }
-        selector.appendChild(option);
-    });
+    // A trick to correctly get the UTC equivalent of a date in a specific timezone.
+    // We calculate the offset between the browser's local time and the target timezone's time.
+    const localOffset = now.getTimezoneOffset() * 60000;
+    const targetDate = new Date(now.toLocaleString("en-US", { timeZone: timeZoneId }));
+    const targetOffset = (now.getTime() - targetDate.getTime()) - localOffset;
+    
+    const fromDate = new Date(startOfDayInZone.getTime() - targetOffset).toISOString();
+    const toDate = new Date(startOfDayInZone.getTime() - targetOffset + (24 * 60 * 60 * 1000 - 1)).toISOString();
 
-    timezoneSelect = new Choices(selector, {
-        searchEnabled: true,
-        itemSelectText: 'Select',
-    });
-
-    selector.addEventListener('change', (event) => {
-        selectedTimeZone = event.detail.value;
-        reloadData();
-    });
+    return { fromDate, toDate };
   }
 
   /**
-   * 🚗 Fetches and aggregates trip data for the current day in the selected timezone.
+   * 🚗 Fetches and aggregates trip data for the current day in the user's timezone.
+   * @param {string} timeZoneId The user's timezone ID.
    * @returns {Promise<Map<string, number>>} A map of device IDs to their total distance.
    */
-  async function loadDailyTripData() {
-    const { fromDate, toDate } = getUtcDateRangeForTimeZone(selectedTimeZone);
-    
+  async function loadDailyTripData(timeZoneId) {
+    const { fromDate, toDate } = getDateRangeInUTCForToday(timeZoneId);
+
     const trips = await fetchFromGeotab("Get", {
       typeName: "Trip",
       search: { fromDate, toDate }
@@ -136,29 +147,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const distanceByDevice = new Map();
     for (const trip of trips) {
+      if (!trip.device) continue;
       const deviceId = trip.device.id;
       const currentDistance = distanceByDevice.get(deviceId) || 0;
       distanceByDevice.set(deviceId, currentDistance + trip.distance);
     }
     return distanceByDevice;
-  }
-  
-  /**
-   * 📅 Calculates the start and end of today in UTC for a given timezone.
-   * @param {string} timeZone The IANA timezone identifier (e.g., 'Asia/Jakarta').
-   * @returns {{fromDate: string, toDate: string}}
-   */
-  function getUtcDateRangeForTimeZone(timeZone) {
-    const { zonedTimeToUtc, startOfDay, endOfDay } = window.dateFnsTz;
-    const nowInZone = zonedTimeToUtc(new Date(), timeZone);
-    
-    const startOfTodayInZone = startOfDay(nowInZone);
-    const endOfTodayInZone = endOfDay(nowInZone);
-    
-    const fromDate = zonedTimeToUtc(startOfTodayInZone, timeZone).toISOString();
-    const toDate = zonedTimeToUtc(endOfTodayInZone, timeZone).toISOString();
-    
-    return { fromDate, toDate };
   }
 
   /**
@@ -190,58 +184,69 @@ document.addEventListener("DOMContentLoaded", () => {
    * 📖 Renders a specific page of the vehicle table.
    */
   async function renderTablePage(page) {
-    const filteredDevices = getFilteredAndSortedDevices();
-    const pageInfo = {
-      totalItems: filteredDevices.length,
-      totalPages: Math.ceil(filteredDevices.length / rowsPerPage),
-      currentPage: page
-    };
-    
-    const start = (page - 1) * rowsPerPage;
-    const end = start + rowsPerPage;
-    const pageDevices = filteredDevices.slice(start, end);
-    
-    if (pageDevices.length === 0) {
-      document.getElementById("vehicle-table-body").innerHTML = `<tr><td colspan="5">No vehicles found.</td></tr>`;
+    showLoader();
+    try {
+      const filteredDevices = getFilteredAndSortedDevices();
+      const pageInfo = {
+        totalItems: filteredDevices.length,
+        totalPages: Math.ceil(filteredDevices.length / rowsPerPage),
+        currentPage: page
+      };
+      
+      const start = (page - 1) * rowsPerPage;
+      const end = start + rowsPerPage;
+      const pageDevices = filteredDevices.slice(start, end);
+      
+      if (pageDevices.length === 0) {
+        document.getElementById("vehicle-table-body").innerHTML = `<tr><td colspan="5">No vehicles found.</td></tr>`;
+        updatePaginationControls(pageInfo);
+        return;
+      }
+
+      const deviceIds = pageDevices.map(d => ({ id: d.id }));
+      const statusList = await fetchFromGeotab("Get", {
+          typeName: "DeviceStatusInfo",
+          search: { deviceSearch: { ids: deviceIds } }
+      }, credentials);
+      const statusMap = Object.fromEntries(statusList.map(s => [s.device.id, s]));
+
+      const tableBody = document.getElementById("vehicle-table-body");
+      tableBody.innerHTML = "";
+      pageDevices.forEach(device => {
+        const status = statusMap[device.id] || {};
+        const distanceToday = dailyTripData.get(device.id) || 0;
+
+        const row = document.createElement("tr");
+        row.classList.add("fade-in");
+        row.innerHTML = `
+            <td>${device.name || "Unknown"}</td>
+            <td><code class="code-block">${device.vehicleIdentificationNumber || "-"}</code></td>
+            <td><code class="code-block">${device.serialNumber || "-"}</code></td>
+            <td>${status.isDriving ? 'Yes' : 'No'}</td>
+            <td>${distanceToday.toFixed(2)}</td>
+        `;
+        tableBody.appendChild(row);
+      });
+      
       updatePaginationControls(pageInfo);
-      return;
+    } catch (err) {
+      console.error(`Error rendering page ${page}:`, err);
+      showToast("Could not load vehicle data for this page.", "error");
+    } finally {
+      hideLoader();
     }
-
-    const deviceIds = pageDevices.map(d => ({ id: d.id }));
-    const statusList = await fetchFromGeotab("Get", {
-        typeName: "DeviceStatusInfo",
-        search: { deviceSearch: { ids: deviceIds } }
-    }, credentials);
-    const statusMap = Object.fromEntries(statusList.map(s => [s.device.id, s]));
-
-    const tableBody = document.getElementById("vehicle-table-body");
-    tableBody.innerHTML = "";
-    pageDevices.forEach(device => {
-      const status = statusMap[device.id] || {};
-      const distanceToday = dailyTripData.get(device.id) || 0;
-      const row = document.createElement("tr");
-      row.classList.add("fade-in");
-      row.innerHTML = `
-          <td>${device.name || "Unknown"}</td>
-          <td><code class="code-block">${device.vehicleIdentificationNumber || "-"}</code></td>
-          <td><code class="code-block">${device.serialNumber || "-"}</code></td>
-          <td>${status.isDriving ? 'Yes' : 'No'}</td>
-          <td>${distanceToday.toFixed(2)}</td>
-      `;
-      tableBody.appendChild(row);
-    });
-    
-    updatePaginationControls(pageInfo);
   }
 
   /**
    * 🎛️ Sets up event listeners for search, sort, and pagination.
    */
   function setupTableControls() {
+    // Search
     document.getElementById("searchInput").addEventListener("input", (e) => {
         currentSearchTerm = e.target.value;
         renderTablePage(1);
     });
+    // Sorting
     document.querySelectorAll("th.sortable").forEach(header => {
       header.addEventListener("click", () => {
         const column = header.dataset.column;
@@ -256,6 +261,7 @@ document.addEventListener("DOMContentLoaded", () => {
         renderTablePage(1);
       });
     });
+    // Set initial sort icon
     document.querySelector(`th[data-column='name'] .sort-icon`).textContent = '▲';
   }
   
@@ -297,7 +303,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     filtered.sort((a, b) => {
         const valA = a[currentSortConfig.column]?.toLowerCase?.() || a[currentSortConfig.column] || "";
-        const valB = b[currentSortConfig.column]?.toLowerCase?.() || b[currentSort-Config.column] || "";
+        const valB = b[currentSortConfig.column]?.toLowerCase?.() || b[currentSortConfig.column] || "";
         if (valA < valB) return currentSortConfig.direction === 'asc' ? -1 : 1;
         if (valA > valB) return currentSortConfig.direction === 'asc' ? 1 : -1;
         return 0;
