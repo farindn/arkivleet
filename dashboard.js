@@ -42,7 +42,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // 2. Fetch all devices and daily trip data concurrently, using the new timezone.
       [allDevices, dailyTripData] = await Promise.all([
-        fetchFromGeotab("Get", { typeName: "Device" }, credentials),
+        fetchFromGeotab("Get", { typeName: "Device", "search": { "fromDate": new Date().toISOString()} }, credentials),
         loadDailyTripData(userTimeZoneId),
       ]);
       document.getElementById("card-total").textContent = allDevices.length;
