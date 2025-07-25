@@ -6,11 +6,13 @@ document.addEventListener("DOMContentLoaded", () => {
     database: sessionStorage.getItem("database"),
   };
 
-  let allDevices = []; // Full list of devices, fetched once.
-  let dailyTripData = new Map(); // Stores total distance per device ID.
+  let allDevices = [];
+  let dailyTripData = new Map();
+  let selectedTimeZone = 'UTC'; // Default timezone
   let currentSortConfig = { column: "name", direction: "asc" };
   let currentSearchTerm = "";
   const rowsPerPage = 10;
+  let timezoneSelect; // To hold the Choices.js instance
 
   // --- INITIALIZATION ---
   initializeDashboard();
@@ -26,29 +28,39 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     setupNavbar();
+    setupTimezoneSelector();
+    
+    // Fetch device list once, as it's static.
+    allDevices = await fetchFromGeotab("Get", { typeName: "Device" }, credentials);
+    document.getElementById("card-total").textContent = allDevices.length;
+    
+    setupTableControls();
+    
+    // Initial data load using the default timezone.
+    await reloadData();
+    
+    document.getElementById("dashboardContent").classList.remove("hidden");
+  }
+  
+  /**
+   * 🔄 Reloads all dynamic data based on the currently selected timezone.
+   */
+  async function reloadData() {
     showLoader();
-
     try {
-      // 1. Fetch all devices and daily trip data concurrently.
-      [allDevices, dailyTripData] = await Promise.all([
-        fetchFromGeotab("Get", { typeName: "Device" }, credentials),
-        loadDailyTripData()
-      ]);
-      document.getElementById("card-total").textContent = allDevices.length;
+      // 1. Fetch daily trip data for the selected timezone.
+      dailyTripData = await loadDailyTripData();
       
-      // 2. Setup table and render the first page.
-      setupTableControls();
+      // 2. Render the first page of the table with the new data.
       await renderTablePage(1);
 
-      // 3. Asynchronously load fleet-wide summary data.
+      // 3. Asynchronously update the summary cards.
       loadFleetSummary();
-
     } catch (err) {
-      console.error("Error initializing dashboard:", err);
-      showToast("Failed to load dashboard data.", "error");
+      console.error("Error reloading data:", err);
+      showToast("Failed to reload data for the selected timezone.", "error");
     } finally {
       hideLoader();
-      document.getElementById("dashboardContent").classList.remove("hidden");
     }
   }
 
@@ -73,24 +85,50 @@ document.addEventListener("DOMContentLoaded", () => {
   function setupNavbar() {
     document.getElementById("user-email").textContent = credentials.userName;
     document.getElementById("user-db").textContent = credentials.database;
-    const userArea = document.getElementById("userArea");
-    const dropdown = document.getElementById("dropdownMenu");
-    userArea.addEventListener("click", () => dropdown.classList.toggle("hidden"));
+    document.getElementById("userArea").addEventListener("click", () => {
+        document.getElementById("dropdownMenu").classList.toggle("hidden");
+    });
     document.getElementById("logoutBtn").addEventListener("click", () => {
       sessionStorage.clear();
       window.location.href = "index.html";
     });
   }
-  
+
   /**
-   * 🚗 Fetches and aggregates trip data for the current day.
+   * 🌍 Sets up the timezone selector dropdown.
+   */
+  function setupTimezoneSelector() {
+    const selector = document.getElementById('timezone-selector');
+    const timezones = Intl.supportedValuesOf('timeZone');
+    
+    timezones.forEach(tz => {
+        const option = document.createElement('option');
+        option.value = tz;
+        option.textContent = tz.replace(/_/g, ' ');
+        if (tz === selectedTimeZone) {
+            option.selected = true;
+        }
+        selector.appendChild(option);
+    });
+
+    timezoneSelect = new Choices(selector, {
+        searchEnabled: true,
+        itemSelectText: 'Select',
+    });
+
+    selector.addEventListener('change', (event) => {
+        selectedTimeZone = event.detail.value;
+        reloadData();
+    });
+  }
+
+  /**
+   * 🚗 Fetches and aggregates trip data for the current day in the selected timezone.
    * @returns {Promise<Map<string, number>>} A map of device IDs to their total distance.
    */
   async function loadDailyTripData() {
-    const today = new Date();
-    const fromDate = new Date(today.setUTCHours(0, 0, 0, 0)).toISOString();
-    const toDate = new Date(today.setUTCHours(23, 59, 59, 999)).toISOString();
-
+    const { fromDate, toDate } = getUtcDateRangeForTimeZone(selectedTimeZone);
+    
     const trips = await fetchFromGeotab("Get", {
       typeName: "Trip",
       search: { fromDate, toDate }
@@ -103,6 +141,24 @@ document.addEventListener("DOMContentLoaded", () => {
       distanceByDevice.set(deviceId, currentDistance + trip.distance);
     }
     return distanceByDevice;
+  }
+  
+  /**
+   * 📅 Calculates the start and end of today in UTC for a given timezone.
+   * @param {string} timeZone The IANA timezone identifier (e.g., 'Asia/Jakarta').
+   * @returns {{fromDate: string, toDate: string}}
+   */
+  function getUtcDateRangeForTimeZone(timeZone) {
+    const { zonedTimeToUtc, startOfDay, endOfDay } = window.dateFnsTz;
+    const nowInZone = zonedTimeToUtc(new Date(), timeZone);
+    
+    const startOfTodayInZone = startOfDay(nowInZone);
+    const endOfTodayInZone = endOfDay(nowInZone);
+    
+    const fromDate = zonedTimeToUtc(startOfTodayInZone, timeZone).toISOString();
+    const toDate = zonedTimeToUtc(endOfTodayInZone, timeZone).toISOString();
+    
+    return { fromDate, toDate };
   }
 
   /**
@@ -134,69 +190,58 @@ document.addEventListener("DOMContentLoaded", () => {
    * 📖 Renders a specific page of the vehicle table.
    */
   async function renderTablePage(page) {
-    showLoader();
-    try {
-      const filteredDevices = getFilteredAndSortedDevices();
-      const pageInfo = {
-        totalItems: filteredDevices.length,
-        totalPages: Math.ceil(filteredDevices.length / rowsPerPage),
-        currentPage: page
-      };
-      
-      const start = (page - 1) * rowsPerPage;
-      const end = start + rowsPerPage;
-      const pageDevices = filteredDevices.slice(start, end);
-      
-      if (pageDevices.length === 0) {
-        document.getElementById("vehicle-table-body").innerHTML = `<tr><td colspan="5">No vehicles found.</td></tr>`;
-        updatePaginationControls(pageInfo);
-        return;
-      }
-
-      const deviceIds = pageDevices.map(d => ({ id: d.id }));
-      const statusList = await fetchFromGeotab("Get", {
-          typeName: "DeviceStatusInfo",
-          search: { deviceSearch: { ids: deviceIds } }
-      }, credentials);
-      const statusMap = Object.fromEntries(statusList.map(s => [s.device.id, s]));
-
-      const tableBody = document.getElementById("vehicle-table-body");
-      tableBody.innerHTML = "";
-      pageDevices.forEach(device => {
-        const status = statusMap[device.id] || {};
-        const distanceToday = dailyTripData.get(device.id) || 0;
-
-        const row = document.createElement("tr");
-        row.classList.add("fade-in");
-        row.innerHTML = `
-            <td>${device.name || "Unknown"}</td>
-            <td><code class="code-block">${device.vehicleIdentificationNumber || "-"}</code></td>
-            <td><code class="code-block">${device.serialNumber || "-"}</code></td>
-            <td>${status.isDriving ? 'Yes' : 'No'}</td>
-            <td>${distanceToday.toFixed(2)}</td>
-        `;
-        tableBody.appendChild(row);
-      });
-      
+    const filteredDevices = getFilteredAndSortedDevices();
+    const pageInfo = {
+      totalItems: filteredDevices.length,
+      totalPages: Math.ceil(filteredDevices.length / rowsPerPage),
+      currentPage: page
+    };
+    
+    const start = (page - 1) * rowsPerPage;
+    const end = start + rowsPerPage;
+    const pageDevices = filteredDevices.slice(start, end);
+    
+    if (pageDevices.length === 0) {
+      document.getElementById("vehicle-table-body").innerHTML = `<tr><td colspan="5">No vehicles found.</td></tr>`;
       updatePaginationControls(pageInfo);
-    } catch (err) {
-      console.error(`Error rendering page ${page}:`, err);
-      showToast("Could not load vehicle data for this page.", "error");
-    } finally {
-      hideLoader();
+      return;
     }
+
+    const deviceIds = pageDevices.map(d => ({ id: d.id }));
+    const statusList = await fetchFromGeotab("Get", {
+        typeName: "DeviceStatusInfo",
+        search: { deviceSearch: { ids: deviceIds } }
+    }, credentials);
+    const statusMap = Object.fromEntries(statusList.map(s => [s.device.id, s]));
+
+    const tableBody = document.getElementById("vehicle-table-body");
+    tableBody.innerHTML = "";
+    pageDevices.forEach(device => {
+      const status = statusMap[device.id] || {};
+      const distanceToday = dailyTripData.get(device.id) || 0;
+      const row = document.createElement("tr");
+      row.classList.add("fade-in");
+      row.innerHTML = `
+          <td>${device.name || "Unknown"}</td>
+          <td><code class="code-block">${device.vehicleIdentificationNumber || "-"}</code></td>
+          <td><code class="code-block">${device.serialNumber || "-"}</code></td>
+          <td>${status.isDriving ? 'Yes' : 'No'}</td>
+          <td>${distanceToday.toFixed(2)}</td>
+      `;
+      tableBody.appendChild(row);
+    });
+    
+    updatePaginationControls(pageInfo);
   }
 
   /**
    * 🎛️ Sets up event listeners for search, sort, and pagination.
    */
   function setupTableControls() {
-    // Search
     document.getElementById("searchInput").addEventListener("input", (e) => {
         currentSearchTerm = e.target.value;
         renderTablePage(1);
     });
-    // Sorting
     document.querySelectorAll("th.sortable").forEach(header => {
       header.addEventListener("click", () => {
         const column = header.dataset.column;
@@ -211,7 +256,6 @@ document.addEventListener("DOMContentLoaded", () => {
         renderTablePage(1);
       });
     });
-    // Set initial sort icon
     document.querySelector(`th[data-column='name'] .sort-icon`).textContent = '▲';
   }
   
@@ -253,7 +297,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     filtered.sort((a, b) => {
         const valA = a[currentSortConfig.column]?.toLowerCase?.() || a[currentSortConfig.column] || "";
-        const valB = b[currentSortConfig.column]?.toLowerCase?.() || b[currentSortConfig.column] || "";
+        const valB = b[currentSortConfig.column]?.toLowerCase?.() || b[currentSort-Config.column] || "";
         if (valA < valB) return currentSortConfig.direction === 'asc' ? -1 : 1;
         if (valA > valB) return currentSortConfig.direction === 'asc' ? 1 : -1;
         return 0;
