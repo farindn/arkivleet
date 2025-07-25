@@ -147,7 +147,6 @@ body {
   background-color: #4f5e75;
 }
 
-/* ✨ New Action Button Style */
 .btn-action {
   background-color: transparent;
   border: 1px solid var(--color-primary);
@@ -567,81 +566,5 @@ th.sortable {
   .toast {
     font-size: 0.9rem;
     padding: 0.75rem 1.5rem;
-  }
-
-  /* ✨ Vehicle List Card Layout for Mobile */
-  .table-wrapper {
-    box-shadow: none;
-    background: transparent;
-  }
-
-  .dashboard-table thead {
-    display: none; /* Hide table headers */
-  }
-
-  .dashboard-table table,
-  .dashboard-table tbody,
-  .dashboard-table tr,
-  .dashboard-table td {
-    display: block;
-    width: 100%;
-  }
-
-  .dashboard-table tr {
-    margin-bottom: 1rem;
-    border-radius: 12px;
-    background: var(--color-white);
-    box-shadow: var(--box-shadow);
-    padding: 1rem;
-  }
-
-  .dashboard-table td {
-    padding: 0.5rem 0;
-    border: none;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    text-align: right;
-  }
-
-  /* Add data labels before each cell */
-  .dashboard-table td::before {
-    content: attr(data-label);
-    font-weight: 600;
-    color: var(--color-primary);
-    text-align: left;
-    margin-right: 1rem;
-  }
-  
-  /* Style the first cell (vehicle name) as a card title */
-  .dashboard-table td:first-child {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--color-primary);
-    padding-bottom: 0.75rem;
-    margin-bottom: 0.75rem;
-    border-bottom: 1px solid #f0f0f0;
-    justify-content: flex-start;
-  }
-
-  /* Don't show a "data-label" for the title cell */
-  .dashboard-table td:first-child::before {
-    display: none;
-  }
-
-  /* ✨ Adjust Action button cell on mobile */
-  .dashboard-table td[data-label="Actions"] {
-    padding-top: 1rem;
-    margin-top: 0.75rem;
-    border-top: 1px solid #f0f0f0;
-  }
-
-  .dashboard-table td[data-label="Actions"]::before {
-      display: none;
-  }
-  
-  .dashboard-table td[data-label="Actions"] .btn-action {
-      width: 100%;
-      justify-content: center;
   }
 }
