@@ -439,3 +439,152 @@ th.sortable {
 
 .navbar-title {
   font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-white);
+  margin: 0;
+  line-height: 1;
+}
+
+.logo-area .user-info {
+  margin-top: 0.25rem;
+  line-height: 1;
+  color: var(--color-white);
+}
+
+.user-area {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  position: relative;
+  cursor: pointer;
+  color: white;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+  font-size: 0.85rem;
+}
+
+.user-icon {
+  font-size: 1.2rem;
+  color: white;
+}
+
+.dropdown-icon {
+  font-size: 1.2rem;
+  color: white;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 110%;
+  right: 0;
+  background: white;
+  border-radius: 8px;
+  box-shadow: var(--box-shadow);
+  overflow: hidden;
+  z-index: 10;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  opacity: 0;
+  transform: translateY(-10px);
+  pointer-events: none;
+}
+
+.dropdown-menu:not(.hidden) {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.dropdown-menu button {
+  padding: 0.75rem 1rem;
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  color: var(--color-primary);
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.dropdown-menu button:hover {
+  background-color: #f1f4f7;
+}
+
+/* ---------------------------------------------------------
+📱 RESPONSIVE LAYOUT (MOBILE)
+--------------------------------------------------------- */
+@media (max-width: 768px) {
+  .dashboard-cards {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .card {
+    flex: 1 1 calc(50% - 0.75rem);
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+
+  .card .material-symbols-rounded {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.8rem;
+  }
+
+  .card p {
+    margin-bottom: 0.4rem;
+    font-size: 0.9rem;
+  }
+
+  .card strong {
+    font-size: 1.25rem;
+    line-height: 1.2;
+  }
+
+  .section-title {
+    font-size: 1.2rem;
+    padding-bottom: 0.5rem;
+  }
+
+  .app-title {
+    font-size: 1.8rem;
+  }
+
+  .input-group input,
+  .btn-primary,
+  .btn-secondary,
+  .input-group label {
+    font-size: 1rem;
+  }
+
+  .toast {
+    font-size: 0.9rem;
+    padding: 0.75rem 1.5rem;
+  }
+  
+  /* ✨ Hide specific table columns on mobile */
+  .dashboard-table th:nth-child(2), /* VIN */
+  .dashboard-table td:nth-child(2),
+  .dashboard-table th:nth-child(3), /* Serial Number */
+  .dashboard-table td:nth-child(3),
+  .dashboard-table th:nth-child(4), /* Driving */
+  .dashboard-table td:nth-child(4),
+  .dashboard-table th:nth-child(5), /* Distance Today */
+  .dashboard-table td:nth-child(5) {
+    display: none;
+  }
+
+  /* ✨ Disable horizontal scroll and fit table to screen */
+  .table-wrapper {
+    overflow: hidden; /* ✨ Changed from 'initial' to 'hidden' */
+  }
+  .dashboard-table table {
+    min-width: 100%;
+  }
+}
