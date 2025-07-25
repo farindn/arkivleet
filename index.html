@@ -3,19 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Connected Car – Login</title>
+    <title>Arkivleet – Login</title>
 
-    <!-- 🎨 Stylesheet -->
     <link rel="stylesheet" href="styles.css" />
 
-    <!-- 🚗 Favicon (Hatchback Car Icon) -->
     <link
       rel="icon"
       href="https://cdn-icons-png.flaticon.com/512/1048/1048313.png"
       type="image/png"
     />
 
-    <!-- 🔤 Google Material Symbols -->
     <link
       href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded"
       rel="stylesheet"
@@ -24,13 +21,10 @@
   <body>
     <main class="login-page">
       <div class="login-box">
-        <!-- 🚘 App Title & Subtitle -->
-        <h1 class="app-title">Connected Car</h1>
-        <p class="subtitle">Powered by Geotab</p>
+        <h1 class="app-title">Arkivleet</h1>
+        <p class="subtitle">Powered by MyGeotab API</p>
 
-        <!-- 🔐 Login Form -->
         <form class="login-form">
-          <!-- 👤 Username Field -->
           <div class="input-group">
             <label for="username">Username</label>
             <div class="input-field">
@@ -44,7 +38,6 @@
             </div>
           </div>
 
-          <!-- 🗄️ Database Field -->
           <div class="input-group">
             <label for="database">Database</label>
             <div class="input-field">
@@ -58,7 +51,6 @@
             </div>
           </div>
 
-          <!-- 🔒 Password Field -->
           <div class="input-group">
             <label for="password">Password</label>
             <div class="input-field">
@@ -72,23 +64,19 @@
             </div>
           </div>
 
-          <!-- 🟦 Action Buttons -->
           <button type="submit" class="btn-primary">Login</button>
           <button type="button" class="btn-secondary">Register</button>
         </form>
       </div>
 
-      <!-- 📢 Toast Notification -->
       <div id="toast" class="toast hidden"></div>
 
-      <!-- ⏳ Loading Spinner with Overlay -->
       <div id="loader-overlay" class="loader-overlay hidden">
         <div class="loader"></div>
         <p class="loader-text">Logging in...</p>
       </div>
     </main>
 
-    <!-- 📜 Script -->
     <script src="script.js"></script>
   </body>
 </html>
