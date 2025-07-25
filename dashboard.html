@@ -6,15 +6,10 @@
   <title>Connected Car – Dashboard</title>
 
   <link rel="stylesheet" href="styles.css" />
-  
-  <link
-    rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css"
-  />
 
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded" rel="stylesheet" />
 
-  <link rel="icon" href="https://cdn.icons-png.flaticon.com/512/1048/1048313.png" type="image/png" />
+  <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/1048/1048313.png" type="image/png" />
 
   <style>
     body > main.hidden { display: none; }
@@ -34,7 +29,7 @@
       <div class="user-info">
         <span id="user-email"></span>
         <span id="user-db"></span>
-      </div>
+        <span id="user-timezone" style="font-size: 0.75rem; opacity: 0.8;"></span> </div>
       <span class="material-symbols-rounded dropdown-icon">expand_more</span>
       <div class="dropdown-menu hidden" id="dropdownMenu">
         <button id="logoutBtn">Log Out</button>
@@ -77,14 +72,7 @@
     </section>
 
     <section class="dashboard-table">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 1rem;">
-        <h2 class="section-title" style="margin-bottom: 0; border: none;">Vehicle List</h2>
-        
-        <div style="display: flex; align-items: center; gap: 0.5rem;">
-            <label for="timezone-selector" style="font-size: 0.9rem; white-space: nowrap;">Timezone:</label>
-            <select id="timezone-selector"></select>
-        </div>
-      </div>
+      <h2 class="section-title">Vehicle List</h2>
 
       <div class="search-bar">
         <input type="text" id="searchInput" placeholder="Search..." />
@@ -114,11 +102,6 @@
   </main>
 
   <script src="utils.js"></script>
-  
-  <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/date-fns@2.28.0/umd/index.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/date-fns-tz@1.3.0/dist/date-fns-tz.umd.min.js"></script>
-  
   <script src="dashboard.js"></script>
 </body>
 </html>
