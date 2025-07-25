@@ -407,11 +407,10 @@ th.sortable {
   background-color: var(--color-primary);
   padding: 1rem 2rem;
   display: flex;
-  justify-content: space-between; /* ✨ Changed */
+  justify-content: space-between;
   align-items: center;
 }
 
-/* ✨ New styles for the logo area */
 .navbar-title {
   font-size: 1.25rem;
   font-weight: 600;
@@ -522,11 +521,6 @@ th.sortable {
     line-height: 1.2;
   }
 
-  .dashboard-table th,
-  .dashboard-table td {
-    font-size: 0.9rem;
-  }
-
   .section-title {
     font-size: 1.2rem;
     padding-bottom: 0.5rem;
@@ -546,5 +540,65 @@ th.sortable {
   .toast {
     font-size: 0.9rem;
     padding: 0.75rem 1.5rem;
+  }
+
+  /* ✨ Vehicle List Card Layout for Mobile */
+  .table-wrapper {
+    box-shadow: none;
+    background: transparent;
+  }
+
+  .dashboard-table thead {
+    display: none; /* Hide table headers */
+  }
+
+  .dashboard-table table,
+  .dashboard-table tbody,
+  .dashboard-table tr,
+  .dashboard-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .dashboard-table tr {
+    margin-bottom: 1rem;
+    border-radius: 12px;
+    background: var(--color-white);
+    box-shadow: var(--box-shadow);
+    padding: 1rem;
+  }
+
+  .dashboard-table td {
+    padding: 0.5rem 0;
+    border: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-align: right;
+  }
+
+  /* Add data labels before each cell */
+  .dashboard-table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--color-primary);
+    text-align: left;
+    margin-right: 1rem;
+  }
+  
+  /* Style the first cell (vehicle name) as a card title */
+  .dashboard-table td:first-child {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--color-primary);
+    padding-bottom: 0.75rem;
+    margin-bottom: 0.75rem;
+    border-bottom: 1px solid #f0f0f0;
+    justify-content: flex-start;
+  }
+
+  /* Don't show a "data-label" for the title cell */
+  .dashboard-table td:first-child::before {
+    display: none;
   }
 }
