@@ -24,12 +24,19 @@
   <div class="toast hidden" id="toast"></div>
 
   <header class="navbar">
+    <div class="logo-area">
+      <h1 class="navbar-title">Connected Car</h1>
+      <div class="user-info">
+        <span id="user-timezone"></span>
+      </div>
+    </div>
+
     <div class="user-area" id="userArea">
       <span class="material-symbols-rounded user-icon">account_circle</span>
       <div class="user-info">
         <span id="user-email"></span>
         <span id="user-db"></span>
-        <span id="user-timezone" style="font-size: 0.75rem; opacity: 0.8;"></span> </div>
+      </div>
       <span class="material-symbols-rounded dropdown-icon">expand_more</span>
       <div class="dropdown-menu hidden" id="dropdownMenu">
         <button id="logoutBtn">Log Out</button>
@@ -65,8 +72,7 @@
       <div class="card">
         <span class="material-symbols-rounded">bar_chart_4_bars</span>
         <div>
-          <p>Less Utilized Vehicles Today</p>
-          <strong class="stat-number" id="card-less-utilized">0</strong>
+          <p>Less Utilized</p> <strong class="stat-number" id="card-less-utilized">0</strong>
         </div>
       </div>
     </section>
@@ -85,10 +91,8 @@
             <tr>
               <th class="sortable" data-column="name">Name <span class="sort-icon"></span></th>
               <th class="sortable" data-column="vehicleIdentificationNumber">VIN <span class="sort-icon"></span></th>
-              <th class="sortable" data-column="serialNumber">Serial <span class="sort-icon"></span></th>
-              <th>Driving</th>
-              <th>Distance Today (km)</th>
-            </tr>
+              <th class="sortable" data-column="serialNumber">Serial Number <span class="sort-icon"></span></th> <th>Driving</th>
+              <th>Distance Today</th> </tr>
           </thead>
           <tbody id="vehicle-table-body"></tbody>
         </table>
