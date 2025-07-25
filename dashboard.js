@@ -42,7 +42,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // 2. Fetch all devices and daily trip data concurrently, using the new timezone.
       [allDevices, dailyTripData] = await Promise.all([
-        fetchFromGeotab("Get", { typeName: "Device", "search": { "fromDate": new Date().toISOString()} }, credentials),
+        fetchFromGeotab("Get", {
+          typeName: "Device",
+          search: { "fromDate": new Date().toISOString() }
+        }, credentials),
         loadDailyTripData(userTimeZoneId),
       ]);
       document.getElementById("card-total").textContent = allDevices.length;
@@ -197,7 +200,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const pageDevices = filteredDevices.slice(start, end);
       
       if (pageDevices.length === 0) {
-        document.getElementById("vehicle-table-body").innerHTML = `<tr><td colspan="5">No vehicles found.</td></tr>`;
+        document.getElementById("vehicle-table-body").innerHTML = `<tr><td colspan="6">No vehicles found.</td></tr>`;
         updatePaginationControls(pageInfo);
         return;
       }
@@ -219,10 +222,16 @@ document.addEventListener("DOMContentLoaded", () => {
         row.classList.add("fade-in");
         row.innerHTML = `
             <td>${device.name || "Unknown"}</td>
-            <td><code class="code-block">${device.vehicleIdentificationNumber || "-"}</code></td>
-            <td><code class="code-block">${device.serialNumber || "-"}</code></td>
-            <td>${status.isDriving ? 'Yes' : 'No'}</td>
-            <td><code class="code-block">${distanceToday.toFixed(2)}</code></td>
+            <td data-label="VIN"><code class="code-block">${device.vehicleIdentificationNumber || "-"}</code></td>
+            <td data-label="Serial Number"><code class="code-block">${device.serialNumber || "-"}</code></td>
+            <td data-label="Driving">${status.isDriving ? 'Yes' : 'No'}</td>
+            <td data-label="Distance Today"><code class="code-block">${distanceToday.toFixed(2)}</code></td>
+            <td data-label="Actions">
+              <button class="btn-action">
+                Details
+                <span class="material-symbols-rounded">arrow_forward_ios</span>
+              </button>
+            </td>
         `;
         tableBody.appendChild(row);
       });
