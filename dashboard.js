@@ -222,11 +222,11 @@ document.addEventListener("DOMContentLoaded", () => {
         row.classList.add("fade-in");
         row.innerHTML = `
             <td>${device.name || "Unknown"}</td>
-            <td data-label="VIN"><code class="code-block">${device.vehicleIdentificationNumber || "-"}</code></td>
-            <td data-label="Serial Number"><code class="code-block">${device.serialNumber || "-"}</code></td>
-            <td data-label="Driving">${status.isDriving ? 'Yes' : 'No'}</td>
-            <td data-label="Distance Today"><code class="code-block">${distanceToday.toFixed(2)}</code></td>
-            <td data-label="Actions">
+            <td><code class="code-block">${device.vehicleIdentificationNumber || "-"}</code></td>
+            <td><code class="code-block">${device.serialNumber || "-"}</code></td>
+            <td>${status.isDriving ? 'Yes' : 'No'}</td>
+            <td><code class="code-block">${distanceToday.toFixed(2)}</code></td>
+            <td>
               <button class="btn-action">
                 Details
                 <span class="material-symbols-rounded">arrow_forward_ios</span>
