@@ -407,8 +407,24 @@ th.sortable {
   background-color: var(--color-primary);
   padding: 1rem 2rem;
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between; /* ✨ Changed */
   align-items: center;
+}
+
+/* ✨ New styles for the logo area */
+.navbar-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-white);
+  margin: 0;
+  line-height: 1;
+}
+
+.logo-area .user-info {
+  margin-top: 0.25rem;
+  line-height: 1;
+  color: var(--color-white);
+  opacity: 0.8;
 }
 
 .user-area {
