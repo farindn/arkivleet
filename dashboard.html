@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Connected Car – Dashboard</title>
+  <title>Arkivleet – Dashboard</title>
 
   <link rel="stylesheet" href="styles.css" />
 
@@ -25,7 +25,7 @@
 
   <header class="navbar">
     <div class="logo-area">
-      <h1 class="navbar-title">Connected Car</h1>
+      <h1 class="navbar-title">Arkivleet</h1>
       <div class="user-info">
         <span id="user-timezone"></span>
       </div>
@@ -72,7 +72,8 @@
       <div class="card">
         <span class="material-symbols-rounded">bar_chart_4_bars</span>
         <div>
-          <p>Less Utilized</p> <strong class="stat-number" id="card-less-utilized">0</strong>
+          <p>Less Utilized</p>
+          <strong class="stat-number" id="card-less-utilized">0</strong>
         </div>
       </div>
     </section>
@@ -91,8 +92,10 @@
             <tr>
               <th class="sortable" data-column="name">Name <span class="sort-icon"></span></th>
               <th class="sortable" data-column="vehicleIdentificationNumber">VIN <span class="sort-icon"></span></th>
-              <th class="sortable" data-column="serialNumber">Serial Number <span class="sort-icon"></span></th> <th>Driving</th>
-              <th>Distance Today</th> </tr>
+              <th class="sortable" data-column="serialNumber">Serial Number <span class="sort-icon"></span></th>
+              <th>Driving</th>
+              <th>Distance Today</th>
+            </tr>
           </thead>
           <tbody id="vehicle-table-body"></tbody>
         </table>
