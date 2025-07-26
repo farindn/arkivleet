@@ -56,6 +56,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // 4. Asynchronously load fleet-wide summary data.
       loadFleetSummary();
+      
+      // ✨ 5. Add a single event listener for all "Details" buttons.
+      setupDetailsButtonListener();
 
     } catch (err) {
       console.error("Error initializing dashboard:", err);
@@ -222,14 +225,13 @@ document.addEventListener("DOMContentLoaded", () => {
         const distanceToday = dailyTripData.get(device.id) || 0;
         const serialNumber = device.serialNumber || "-";
 
-        // ✨ Logic updated to use isDeviceCommunicating
         const isCommunicating = status.isDeviceCommunicating;
         const updateIcon = isCommunicating ? 'wifi' : 'wifi_off';
         const updateColorClass = isCommunicating ? 'update-fresh' : 'update-stale';
         const formattedDateTime = status.dateTime ? dateTimeFormatter.format(new Date(status.dateTime)) : "N/A";
 
         const actionButtonHTML = `
-          <button class="btn-action">
+          <button class="btn-action" data-id="${device.id}">
             Details
             <span class="material-symbols-rounded">arrow_forward_ios</span>
           </button>
@@ -297,6 +299,19 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     // Set initial sort icon
     document.querySelector(`th[data-column='name'] .sort-icon`).textContent = '▲';
+  }
+
+  /**
+   * ✨ Adds a click listener to the table body to handle all "Details" button clicks.
+   */
+  function setupDetailsButtonListener() {
+    document.getElementById("vehicle-table-body").addEventListener('click', (event) => {
+      const button = event.target.closest('.btn-action');
+      if (button) {
+        const deviceId = button.dataset.id;
+        window.location.href = `details.html?id=${deviceId}`;
+      }
+    });
   }
   
   /**
