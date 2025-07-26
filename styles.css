@@ -515,7 +515,7 @@ th.sortable {
 }
 
 .dropdown-menu button:hover {
-  background-color: #f1f4fT7;
+  background-color: #f1f4f7;
 }
 
 #logoutBtn {
@@ -602,12 +602,15 @@ th.sortable {
     display: none;
   }
   .mobile-view {
-    display: block;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
   }
 
-  /* Hide desktop columns on mobile */
-  .dashboard-table th:not(:first-child):not(:last-child),
-  .dashboard-table td:not(:first-child):not(:last-child) {
+  /* ✨ Hide all but the first column on mobile */
+  .dashboard-table th:not(:first-child),
+  .dashboard-table td:not(:first-child) {
     display: none;
   }
 
@@ -626,24 +629,14 @@ th.sortable {
     display: block;
   }
 
-  /* Style the multi-line vehicle info in the first column */
-  .dashboard-table tr {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
   .dashboard-table td {
-    padding-top: 1rem;
-    padding-bottom: 1rem;
+    padding: 1rem;
   }
-  .dashboard-table td:first-child {
-    flex-grow: 1;
+  
+  .mobile-view-info {
+    line-height: 1.4;
   }
-  .dashboard-table td:last-child {
-    flex-shrink: 0;
-    padding-left: 0.5rem;
-  }
-
+  
   .vehicle-name {
     font-weight: 600;
     color: var(--color-primary);
