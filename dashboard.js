@@ -224,7 +224,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         let updateColorClass = '';
         if (status.dateTime) {
-            const hoursDiff = (new Date() - new Date(status.dateTime)) / 3600000; // 3,600,000 milliseconds in an hour
+            const hoursDiff = (new Date() - new Date(status.dateTime)) / 3600000;
             updateColorClass = hoursDiff <= 24 ? 'update-fresh' : 'update-stale';
         }
         const formattedDateTime = status.dateTime ? dateTimeFormatter.format(new Date(status.dateTime)) : "N/A";
@@ -238,7 +238,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 <div class="vehicle-name">${device.name || "Unknown"}</div>
                 <div class="vehicle-serial"><code class="code-block">${serialNumber}</code></div>
                 <div class="vehicle-last-update">
-                  Last updated: <code class="code-block ${updateColorClass}">${formattedDateTime}</code>
+                  Last updated: <span class="${updateColorClass}">${formattedDateTime}</span>
                 </div>
               </div>
               <span class="desktop-view">${device.name || "Unknown"}</span>
