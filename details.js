@@ -140,18 +140,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const updateColorClass = isCommunicating ? 'update-fresh' : 'update-stale';
     const formattedDateTime = status.dateTime ? dateTimeFormatter.format(new Date(status.dateTime)) : 'N/A';
     
-    // Populate mobile-only subtitle
-    const mobileLastCommElement = document.getElementById('detail-page-last-comm');
-    mobileLastCommElement.innerHTML = `
+    const lastCommElement = document.getElementById('detail-page-last-comm');
+    lastCommElement.innerHTML = `
       <span class="material-symbols-rounded ${updateColorClass}">${updateIcon}</span>
       <span>Last communicated: </span>
       <span class="${updateColorClass}">${formattedDateTime}</span>
     `;
-    
-    // Populate and color the desktop view element
-    const desktopLastCommElement = document.getElementById('detail-last-comm');
-    desktopLastCommElement.textContent = formattedDateTime;
-    desktopLastCommElement.className = `detail-value ${updateColorClass}`;
     
     // Populate status card
     document.getElementById('detail-address').textContent = address;
