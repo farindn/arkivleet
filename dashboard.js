@@ -233,18 +233,29 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         const formattedDateTime = status.dateTime ? dateTimeFormatter.format(new Date(status.dateTime)) : "N/A";
 
+        // ✨ Define the action button HTML once
+        const actionButtonHTML = `
+          <button class="btn-action">
+            Details
+            <span class="material-symbols-rounded">arrow_forward_ios</span>
+          </button>
+        `;
+
         const row = document.createElement("tr");
         row.classList.add("fade-in");
         
         row.innerHTML = `
             <td>
               <div class="mobile-view">
-                <div class="vehicle-name">${device.name || "Unknown"}</div>
-                <div class="vehicle-serial"><code class="code-block">${serialNumber}</code></div>
-                <div class="vehicle-last-update">
-                  <span class="material-symbols-rounded ${updateColorClass}">${updateIcon}</span>
-                  <span class="${updateColorClass}">${formattedDateTime}</span>
+                <div class="mobile-view-info">
+                  <div class="vehicle-name">${device.name || "Unknown"}</div>
+                  <div class="vehicle-serial"><code class="code-block">${serialNumber}</code></div>
+                  <div class="vehicle-last-update">
+                    <span class="material-symbols-rounded ${updateColorClass}">${updateIcon}</span>
+                    <span class="${updateColorClass}">${formattedDateTime}</span>
+                  </div>
                 </div>
+                ${actionButtonHTML}
               </div>
               <span class="desktop-view">${device.name || "Unknown"}</span>
             </td>
@@ -252,12 +263,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <td><code class="code-block">${serialNumber}</code></td>
             <td>${status.isDriving ? 'Yes' : 'No'}</td>
             <td><code class="code-block">${distanceToday.toFixed(2)}</code></td>
-            <td>
-              <button class="btn-action">
-                Details
-                <span class="material-symbols-rounded">arrow_forward_ios</span>
-              </button>
-            </td>
+            <td>${actionButtonHTML}</td>
         `;
         tableBody.appendChild(row);
       });
