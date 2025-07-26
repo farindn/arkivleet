@@ -133,21 +133,25 @@ document.addEventListener("DOMContentLoaded", () => {
         hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true,
     });
     
-    // Populate main title
     document.getElementById('vehicle-name-title').textContent = device.name || 'Vehicle Details';
 
-    // ✨ Populate new "Last Communicated" status under the title
     const isCommunicating = status.isDeviceCommunicating;
     const updateIcon = isCommunicating ? 'wifi' : 'wifi_off';
     const updateColorClass = isCommunicating ? 'update-fresh' : 'update-stale';
     const formattedDateTime = status.dateTime ? dateTimeFormatter.format(new Date(status.dateTime)) : 'N/A';
     
-    const lastCommElement = document.getElementById('detail-page-last-comm');
-    lastCommElement.innerHTML = `
+    // Populate mobile-only subtitle
+    const mobileLastCommElement = document.getElementById('detail-page-last-comm');
+    mobileLastCommElement.innerHTML = `
       <span class="material-symbols-rounded ${updateColorClass}">${updateIcon}</span>
       <span>Last communicated: </span>
       <span class="${updateColorClass}">${formattedDateTime}</span>
     `;
+    
+    // Populate and color the desktop view element
+    const desktopLastCommElement = document.getElementById('detail-last-comm');
+    desktopLastCommElement.textContent = formattedDateTime;
+    desktopLastCommElement.className = `detail-value ${updateColorClass}`;
     
     // Populate status card
     document.getElementById('detail-address').textContent = address;
