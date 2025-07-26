@@ -205,15 +205,6 @@ document.addEventListener("DOMContentLoaded", () => {
           search: { deviceSearch: { ids: deviceIds } }
       }, credentials);
       const statusMap = Object.fromEntries(statusList.map(s => [s.device.id, s]));
-      
-      const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
-        timeZone: userTimeZoneId,
-        month: 'short',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true,
-      });
 
       const tableBody = document.getElementById("vehicle-table-body");
       tableBody.innerHTML = "";
@@ -222,12 +213,16 @@ document.addEventListener("DOMContentLoaded", () => {
         const distanceToday = dailyTripData.get(device.id) || 0;
         const serialNumber = device.serialNumber || "-";
 
-        let updateColorClass = '';
+        // ✨ Determine icon and color based on last communication time
+        let updateIcon = 'wifi_off';
+        let updateColorClass = 'update-stale';
         if (status.dateTime) {
             const hoursDiff = (new Date() - new Date(status.dateTime)) / 3600000;
-            updateColorClass = hoursDiff <= 24 ? 'update-fresh' : 'update-stale';
+            if (hoursDiff <= 24) {
+                updateIcon = 'wifi';
+                updateColorClass = 'update-fresh';
+            }
         }
-        const formattedDateTime = status.dateTime ? dateTimeFormatter.format(new Date(status.dateTime)) : "N/A";
 
         const row = document.createElement("tr");
         row.classList.add("fade-in");
@@ -235,11 +230,11 @@ document.addEventListener("DOMContentLoaded", () => {
         row.innerHTML = `
             <td>
               <div class="mobile-view">
-                <div class="vehicle-name">${device.name || "Unknown"}</div>
-                <div class="vehicle-serial"><code class="code-block">${serialNumber}</code></div>
-                <div class="vehicle-last-update">
-                  Last updated: <span class="${updateColorClass}">${formattedDateTime}</span>
+                <div class="mobile-view-info">
+                  <div class="vehicle-name">${device.name || "Unknown"}</div>
+                  <div class="vehicle-serial"><code class="code-block">${serialNumber}</code></div>
                 </div>
+                <span class="material-symbols-rounded vehicle-status-icon ${updateColorClass}">${updateIcon}</span>
               </div>
               <span class="desktop-view">${device.name || "Unknown"}</span>
             </td>
