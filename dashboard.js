@@ -85,8 +85,14 @@ document.addEventListener("DOMContentLoaded", () => {
    * 🧑‍💻 Sets up the user navbar, dropdown, and logout button.
    */
   function setupNavbar() {
+    // Populate original navbar elements (for desktop)
     document.getElementById("user-email").textContent = credentials.userName;
     document.getElementById("user-db").textContent = credentials.database;
+    
+    // ✨ Populate new dropdown elements (for mobile)
+    document.getElementById("dropdown-user-email").textContent = credentials.userName;
+    document.getElementById("dropdown-user-db").textContent = credentials.database;
+
     const userArea = document.getElementById("userArea");
     const dropdown = document.getElementById("dropdownMenu");
     userArea.addEventListener("click", () => dropdown.classList.toggle("hidden"));
