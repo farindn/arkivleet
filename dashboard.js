@@ -85,11 +85,9 @@ document.addEventListener("DOMContentLoaded", () => {
    * 🧑‍💻 Sets up the user navbar, dropdown, and logout button.
    */
   function setupNavbar() {
-    // Populate original navbar elements (for desktop)
     document.getElementById("user-email").textContent = credentials.userName;
     document.getElementById("user-db").textContent = credentials.database;
     
-    // ✨ Populate new dropdown elements (for mobile)
     document.getElementById("dropdown-user-email").textContent = credentials.userName;
     document.getElementById("dropdown-user-db").textContent = credentials.database;
 
@@ -104,34 +102,26 @@ document.addEventListener("DOMContentLoaded", () => {
   
   /**
    * 📅 Calculates the start and end of "today" in UTC based on the user's timezone.
-   * @param {string} timeZoneId The IANA timezone ID (e.g., "Asia/Jakarta").
-   * @returns {{fromDate: string, toDate: string}} The UTC date strings.
    */
   function getDateRangeInUTCForToday(timeZoneId) {
-    // 1. Get the current date parts in the target timezone using 'en-CA' format (YYYY-MM-DD).
     const now = new Date();
     const parts = new Intl.DateTimeFormat("en-CA", { timeZone: timeZoneId }).formatToParts(now);
     const { year, month, day } = parts.reduce((acc, p) => ({ ...acc, [p.type]: p.value }), {});
 
-    // 2. Create a string for midnight on that day and an anchor date object from it.
     const midnightString = `${year}-${month}-${day}T00:00:00`;
-    const anchorDate = new Date(midnightString + "Z"); // Treat as UTC to create a solid anchor point in time.
+    const anchorDate = new Date(midnightString + "Z");
     
-    // 3. Find the hour for that anchor point in the target timezone.
     const hourInZone = new Intl.DateTimeFormat("en-US", {
       timeZone: timeZoneId,
       hour: "numeric",
-      hourCycle: "h23", // Use 24-hour format (00-23)
+      hourCycle: "h23",
     }).format(anchorDate);
 
-    // 4. The offset is the difference between UTC's midnight hour (0) and the hour in the target zone.
     const offsetInHours = 0 - parseInt(hourInZone, 10);
 
-    // 5. Create the correct start date in UTC by applying the offset to our anchor.
     const fromDate = new Date(anchorDate);
     fromDate.setUTCHours(fromDate.getUTCHours() + offsetInHours);
 
-    // 6. The end date is 24 hours later, minus one millisecond.
     const toDate = new Date(fromDate.getTime() + (24 * 60 * 60 * 1000 - 1));
 
     return { 
@@ -142,8 +132,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   /**
    * 🚗 Fetches and aggregates trip data for the current day in the user's timezone.
-   * @param {string} timeZoneId The user's timezone ID.
-   * @returns {Promise<Map<string, number>>} A map of device IDs to their total distance.
    */
   async function loadDailyTripData(timeZoneId) {
     const { fromDate, toDate } = getDateRangeInUTCForToday(timeZoneId);
@@ -218,16 +206,33 @@ document.addEventListener("DOMContentLoaded", () => {
       }, credentials);
       const statusMap = Object.fromEntries(statusList.map(s => [s.device.id, s]));
 
+      // ✨ Formatter for the "Last updated" timestamp
+      const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
+        timeZone: userTimeZoneId,
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      });
+
       const tableBody = document.getElementById("vehicle-table-body");
       tableBody.innerHTML = "";
       pageDevices.forEach(device => {
         const status = statusMap[device.id] || {};
         const distanceToday = dailyTripData.get(device.id) || 0;
+        const lastUpdate = status.dateTime ? dateTimeFormatter.format(new Date(status.dateTime)) : "N/A";
 
         const row = document.createElement("tr");
         row.classList.add("fade-in");
         row.innerHTML = `
-            <td>${device.name || "Unknown"}</td>
+            <td>
+              <div class="vehicle-name">${device.name || "Unknown"}</div>
+              <div class="vehicle-serial">
+                <code class="code-block">${device.serialNumber || "-"}</code>
+              </div>
+              <div class="vehicle-last-update">Last updated: ${lastUpdate}</div>
+            </td>
             <td><code class="code-block">${device.vehicleIdentificationNumber || "-"}</code></td>
             <td><code class="code-block">${device.serialNumber || "-"}</code></td>
             <td>${status.isDriving ? 'Yes' : 'No'}</td>
