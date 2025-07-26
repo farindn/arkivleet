@@ -340,19 +340,8 @@ body {
   border-radius: 4px;
 }
 
-.vehicle-name {
-  font-weight: 600;
-  color: var(--color-primary);
-  margin-bottom: 0.25rem;
-}
-
-.vehicle-serial {
-  margin-bottom: 0.5rem;
-}
-
-.vehicle-last-update {
-  font-size: 0.8rem;
-  color: var(--color-slate);
+.mobile-view {
+  display: none;
 }
 
 /* ---------------------------------------------------------
@@ -554,6 +543,10 @@ th.sortable {
 📱 RESPONSIVE LAYOUT (MOBILE)
 --------------------------------------------------------- */
 @media (max-width: 768px) {
+  .dashboard {
+    padding: 1rem;
+  }
+  
   .dashboard-cards {
     flex-direction: row;
     flex-wrap: wrap;
@@ -605,14 +598,16 @@ th.sortable {
     padding: 0.75rem 1.5rem;
   }
   
-  .dashboard-table th:nth-child(2), /* VIN */
-  .dashboard-table td:nth-child(2),
-  .dashboard-table th:nth-child(3), /* Serial Number (now hidden on mobile) */
-  .dashboard-table td:nth-child(3),
-  .dashboard-table th:nth-child(4), /* Driving */
-  .dashboard-table td:nth-child(4),
-  .dashboard-table th:nth-child(5), /* Distance Today */
-  .dashboard-table td:nth-child(5) {
+  .desktop-view {
+    display: none;
+  }
+  .mobile-view {
+    display: block;
+  }
+
+  /* Hide desktop columns on mobile */
+  .dashboard-table th:not(:first-child):not(:last-child),
+  .dashboard-table td:not(:first-child):not(:last-child) {
     display: none;
   }
 
@@ -631,7 +626,7 @@ th.sortable {
     display: block;
   }
 
-  /* ✨ Style the multi-line vehicle info in the first column */
+  /* Style the multi-line vehicle info in the first column */
   .dashboard-table tr {
     display: flex;
     justify-content: space-between;
@@ -639,5 +634,29 @@ th.sortable {
   }
   .dashboard-table td:first-child {
     flex-grow: 1;
+  }
+  .dashboard-table td:last-child {
+    flex-shrink: 0;
+  }
+
+  .vehicle-name {
+    font-weight: 600;
+    color: var(--color-primary);
+    margin-bottom: 0.25rem;
+  }
+  .vehicle-serial {
+    margin-bottom: 0.5rem;
+    margin-left: -0.3rem; /* ✨ Applied */
+    font-size: 0.8rem;   /* ✨ Applied */
+  }
+  .vehicle-last-update {
+    font-size: 0.8rem;
+    color: var(--color-slate);
+  }
+  .update-fresh {
+    color: var(--color-success); /* ✨ Applied */
+  }
+  .update-stale {
+    color: var(--color-error); /* ✨ Applied */
   }
 }
