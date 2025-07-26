@@ -205,8 +205,7 @@ document.addEventListener("DOMContentLoaded", () => {
           search: { deviceSearch: { ids: deviceIds } }
       }, credentials);
       const statusMap = Object.fromEntries(statusList.map(s => [s.device.id, s]));
-
-      // ✨ Formatter for the "Last updated" timestamp
+      
       const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
         timeZone: userTimeZoneId,
         month: 'short',
@@ -221,20 +220,31 @@ document.addEventListener("DOMContentLoaded", () => {
       pageDevices.forEach(device => {
         const status = statusMap[device.id] || {};
         const distanceToday = dailyTripData.get(device.id) || 0;
-        const lastUpdate = status.dateTime ? dateTimeFormatter.format(new Date(status.dateTime)) : "N/A";
+        const serialNumber = device.serialNumber || "-";
+
+        let updateColorClass = '';
+        if (status.dateTime) {
+            const hoursDiff = (new Date() - new Date(status.dateTime)) / 3600000; // 3,600,000 milliseconds in an hour
+            updateColorClass = hoursDiff <= 24 ? 'update-fresh' : 'update-stale';
+        }
+        const formattedDateTime = status.dateTime ? dateTimeFormatter.format(new Date(status.dateTime)) : "N/A";
 
         const row = document.createElement("tr");
         row.classList.add("fade-in");
+        
         row.innerHTML = `
             <td>
-              <div class="vehicle-name">${device.name || "Unknown"}</div>
-              <div class="vehicle-serial">
-                <code class="code-block">${device.serialNumber || "-"}</code>
+              <div class="mobile-view">
+                <div class="vehicle-name">${device.name || "Unknown"}</div>
+                <div class="vehicle-serial"><code class="code-block">${serialNumber}</code></div>
+                <div class="vehicle-last-update">
+                  Last updated: <code class="code-block ${updateColorClass}">${formattedDateTime}</code>
+                </div>
               </div>
-              <div class="vehicle-last-update">Last updated: ${lastUpdate}</div>
+              <span class="desktop-view">${device.name || "Unknown"}</span>
             </td>
             <td><code class="code-block">${device.vehicleIdentificationNumber || "-"}</code></td>
-            <td><code class="code-block">${device.serialNumber || "-"}</code></td>
+            <td><code class="code-block">${serialNumber}</code></td>
             <td>${status.isDriving ? 'Yes' : 'No'}</td>
             <td><code class="code-block">${distanceToday.toFixed(2)}</code></td>
             <td>
