@@ -406,6 +406,9 @@ body {
     font-size: 1.1rem;
     margin-right: 0.25rem;
 }
+.detail-subtitle-label {
+    margin-right: 0.3rem;
+}
 .update-fresh {
     color: var(--color-success);
 }
@@ -726,12 +729,5 @@ th.sortable {
   .vehicle-last-update .material-symbols-rounded {
     font-size: 1rem;
     margin-right: 0.25rem;
-  }
-  
-  .update-fresh {
-    color: var(--color-success);
-  }
-  .update-stale {
-    color: var(--color-error);
   }
 }
