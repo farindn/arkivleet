@@ -646,17 +646,17 @@ th.sortable {
   }
   .vehicle-serial {
     margin-bottom: 0.5rem;
-    margin-left: -0.3rem; /* ✨ Applied */
-    font-size: 0.8rem;   /* ✨ Applied */
+    margin-left: -0.3rem;
+    font-size: 0.8rem;
   }
   .vehicle-last-update {
     font-size: 0.8rem;
     color: var(--color-slate);
   }
   .update-fresh {
-    color: var(--color-success); /* ✨ Applied */
+    color: var(--color-success);
   }
   .update-stale {
-    color: var(--color-error); /* ✨ Applied */
+    color: var(--color-error);
   }
 }
