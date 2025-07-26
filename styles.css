@@ -340,6 +340,21 @@ body {
   border-radius: 4px;
 }
 
+.vehicle-name {
+  font-weight: 600;
+  color: var(--color-primary);
+  margin-bottom: 0.25rem;
+}
+
+.vehicle-serial {
+  margin-bottom: 0.5rem;
+}
+
+.vehicle-last-update {
+  font-size: 0.8rem;
+  color: var(--color-slate);
+}
+
 /* ---------------------------------------------------------
 🔍 SEARCH BAR
 --------------------------------------------------------- */
@@ -514,7 +529,6 @@ th.sortable {
   background-color: #f1f4f7;
 }
 
-/* ✨ Make the log out button text red */
 #logoutBtn {
   color: var(--color-error);
 }
@@ -593,7 +607,7 @@ th.sortable {
   
   .dashboard-table th:nth-child(2), /* VIN */
   .dashboard-table td:nth-child(2),
-  .dashboard-table th:nth-child(3), /* Serial Number */
+  .dashboard-table th:nth-child(3), /* Serial Number (now hidden on mobile) */
   .dashboard-table td:nth-child(3),
   .dashboard-table th:nth-child(4), /* Driving */
   .dashboard-table td:nth-child(4),
@@ -615,5 +629,15 @@ th.sortable {
 
   .dropdown-user-info {
     display: block;
+  }
+
+  /* ✨ Style the multi-line vehicle info in the first column */
+  .dashboard-table tr {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .dashboard-table td:first-child {
+    flex-grow: 1;
   }
 }
