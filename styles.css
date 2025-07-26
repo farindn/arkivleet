@@ -172,6 +172,22 @@ body {
   margin-right: 0;
 }
 
+.back-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    text-decoration: none;
+    color: var(--color-slate);
+    margin-bottom: 1rem;
+}
+.back-button:hover {
+    color: var(--color-primary);
+}
+.back-button .material-symbols-rounded {
+    font-size: 1.2rem;
+    margin-right: 0;
+}
+
 
 /* ---------------------------------------------------------
 📢 TOAST NOTIFICATIONS
@@ -343,6 +359,40 @@ body {
 .mobile-view {
   display: none;
 }
+
+/* ---------------------------------------------------------
+✨ DETAILS PAGE
+--------------------------------------------------------- */
+.page-header {
+  margin-bottom: -0.5rem;
+}
+.details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+.details-card {
+    background: var(--color-white);
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: var(--box-shadow);
+}
+.details-card-title {
+    font-size: 1.1rem;
+    padding-bottom: 0.75rem;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid #e1e5eb;
+}
+.detail-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    font-size: 0.95rem;
+}
+.detail-label {
+    color: var(--color-slate);
+}
+
 
 /* ---------------------------------------------------------
 🔍 SEARCH BAR
@@ -608,7 +658,6 @@ th.sortable {
     width: 100%;
   }
 
-  /* ✨ Hide all but the first column on mobile */
   .dashboard-table th:not(:first-child),
   .dashboard-table td:not(:first-child) {
     display: none;
