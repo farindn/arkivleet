@@ -392,6 +392,18 @@ body {
 .detail-label {
     color: var(--color-slate);
 }
+.detail-page-subtitle {
+    margin-top: -1rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+    color: var(--color-slate);
+}
+.detail-page-subtitle .material-symbols-rounded {
+    font-size: 1.1rem;
+    margin-right: 0.25rem;
+}
 
 
 /* ---------------------------------------------------------
@@ -681,7 +693,7 @@ th.sortable {
   .dashboard-table td {
     padding: 1rem;
   }
-  
+
   .mobile-view-info {
     line-height: 1.4;
   }
