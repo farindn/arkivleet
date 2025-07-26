@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Arkivleet – Vehicle Details</title>
+
+  <link rel="stylesheet" href="styles.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded" rel="stylesheet" />
+  <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/1048/1048313.png" type="image/png" />
+</head>
+<body>
+  <div class="loader-overlay" id="loader-overlay">
+    <div class="loader"></div>
+    <div class="loader-text">Loading details...</div>
+  </div>
+
+  <div class="toast hidden" id="toast"></div>
+
+  <header class="navbar">
+    <div class="logo-area">
+      <h1 class="navbar-title">Arkivleet</h1>
+      <div class="user-info">
+        <span id="user-timezone"></span>
+      </div>
+    </div>
+    <div class="user-area" id="userArea">
+      <span class="material-symbols-rounded user-icon">account_circle</span>
+      <div class="user-info">
+        <span id="user-email"></span>
+        <span id="user-db"></span>
+      </div>
+      <span class="material-symbols-rounded dropdown-icon">expand_more</span>
+      <div class="dropdown-menu hidden" id="dropdownMenu">
+        <div class="dropdown-user-info">
+          <span id="dropdown-user-email"></span>
+          <span id="dropdown-user-db"></span>
+        </div>
+        <button id="logoutBtn">Log out</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="dashboard" id="detailsContent">
+    <div class="page-header">
+      <a href="dashboard.html" class="back-button">
+        <span class="material-symbols-rounded">arrow_back_ios</span>
+        Back
+      </a>
+      <h1 class="section-title" id="vehicle-name-title">Vehicle Details</h1>
+    </div>
+
+    <section class="details-grid">
+      <div class="details-card">
+        <h2 class="details-card-title">Current Status</h2>
+        <div class="detail-item">
+          <span class="detail-label">Location</span>
+          <span class="detail-value" id="detail-address">--</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Coordinates</span>
+          <span class="detail-value"><code class="code-block" id="detail-coords">--</code></span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Speed</span>
+          <span class="detail-value" id="detail-speed">--</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Heading</span>
+          <span class="detail-value" id="detail-heading">--</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Last Communicated</span>
+          <span class="detail-value" id="detail-last-comm">--</span>
+        </div>
+      </div>
+      <div class="details-card">
+        <h2 class="details-card-title">Asset Information</h2>
+        <div class="detail-item">
+          <span class="detail-label">VIN</span>
+          <span class="detail-value"><code class="code-block" id="detail-vin">--</code></span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Serial Number</span>
+          <span class="detail-value"><code class="code-block" id="detail-serial">--</code></span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Odometer</span>
+          <span class="detail-value" id="detail-odometer">--</span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="utils.js"></script>
+  <script src="details.js"></script>
+</body>
+</html>
