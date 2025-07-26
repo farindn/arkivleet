@@ -505,7 +505,8 @@ th.sortable {
   width: 100%;
   text-align: left;
   color: var(--color-primary);
-  font-size: 0.95rem;
+  font-size: 0.9rem; /* ✨ Changed */
+  font-family: 'IBM Plex Sans', sans-serif; /* ✨ Added */
   cursor: pointer;
 }
 
@@ -513,10 +514,10 @@ th.sortable {
   background-color: #f1f4f7;
 }
 
-/* ✨ New styles for user info inside the dropdown */
 .dropdown-user-info {
   padding: 0.75rem 1rem;
   border-bottom: 1px solid #f0f0f0;
+  display: none; /* ✨ Hide on desktop by default */
 }
 
 .dropdown-user-info span {
@@ -527,7 +528,7 @@ th.sortable {
 }
 
 .dropdown-user-info span:first-child {
-  font-weight: 600; /* Make username bold */
+  font-weight: 600;
 }
 
 /* ---------------------------------------------------------
@@ -585,7 +586,6 @@ th.sortable {
     padding: 0.75rem 1.5rem;
   }
   
-  /* ✨ Hide specific table columns on mobile */
   .dashboard-table th:nth-child(2), /* VIN */
   .dashboard-table td:nth-child(2),
   .dashboard-table th:nth-child(3), /* Serial Number */
@@ -597,7 +597,6 @@ th.sortable {
     display: none;
   }
 
-  /* ✨ Disable horizontal scroll and fit table to screen */
   .table-wrapper {
     overflow: hidden;
   }
@@ -608,5 +607,10 @@ th.sortable {
   /* ✨ Hide user info text in the navbar on mobile */
   .user-area .user-info {
     display: none;
+  }
+
+  /* ✨ Show user info inside the dropdown only on mobile */
+  .dropdown-user-info {
+    display: block;
   }
 }
