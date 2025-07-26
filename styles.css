@@ -513,6 +513,23 @@ th.sortable {
   background-color: #f1f4f7;
 }
 
+/* ✨ New styles for user info inside the dropdown */
+.dropdown-user-info {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.dropdown-user-info span {
+  display: block;
+  line-height: 1.3;
+  font-size: 0.9rem;
+  color: var(--color-primary);
+}
+
+.dropdown-user-info span:first-child {
+  font-weight: 600; /* Make username bold */
+}
+
 /* ---------------------------------------------------------
 📱 RESPONSIVE LAYOUT (MOBILE)
 --------------------------------------------------------- */
@@ -582,9 +599,14 @@ th.sortable {
 
   /* ✨ Disable horizontal scroll and fit table to screen */
   .table-wrapper {
-    overflow: hidden; /* ✨ Changed from 'initial' to 'hidden' */
+    overflow: hidden;
   }
   .dashboard-table table {
     min-width: 100%;
+  }
+
+  /* ✨ Hide user info text in the navbar on mobile */
+  .user-area .user-info {
+    display: none;
   }
 }
