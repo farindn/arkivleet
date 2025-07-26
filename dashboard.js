@@ -222,18 +222,12 @@ document.addEventListener("DOMContentLoaded", () => {
         const distanceToday = dailyTripData.get(device.id) || 0;
         const serialNumber = device.serialNumber || "-";
 
-        let updateIcon = 'wifi_off';
-        let updateColorClass = 'update-stale';
-        if (status.dateTime) {
-            const hoursDiff = (new Date() - new Date(status.dateTime)) / 3600000;
-            if (hoursDiff <= 24) {
-                updateIcon = 'wifi';
-                updateColorClass = 'update-fresh';
-            }
-        }
+        // ✨ Logic updated to use isDeviceCommunicating
+        const isCommunicating = status.isDeviceCommunicating;
+        const updateIcon = isCommunicating ? 'wifi' : 'wifi_off';
+        const updateColorClass = isCommunicating ? 'update-fresh' : 'update-stale';
         const formattedDateTime = status.dateTime ? dateTimeFormatter.format(new Date(status.dateTime)) : "N/A";
 
-        // ✨ Define the action button HTML once
         const actionButtonHTML = `
           <button class="btn-action">
             Details
