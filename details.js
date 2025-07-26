@@ -144,7 +144,7 @@ document.addEventListener("DOMContentLoaded", () => {
     lastCommElement.innerHTML = `
       <span class="material-symbols-rounded ${updateColorClass}">${updateIcon}</span>
       <span>Last communicated: </span>
-      <span class="${updateColorClass}"> ${formattedDateTime}</span>
+      <span class="${updateColorClass}">${formattedDateTime}</span>
     `;
     
     // Populate status card
