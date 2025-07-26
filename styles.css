@@ -515,7 +515,7 @@ th.sortable {
 }
 
 .dropdown-menu button:hover {
-  background-color: #f1f4f7;
+  background-color: #f1f4fT7;
 }
 
 #logoutBtn {
@@ -602,10 +602,7 @@ th.sortable {
     display: none;
   }
   .mobile-view {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
+    display: block;
   }
 
   /* Hide desktop columns on mobile */
@@ -654,13 +651,19 @@ th.sortable {
     font-size: 1rem;
   }
   .vehicle-serial {
-    margin-bottom: 0;
+    margin-bottom: 0.5rem;
     margin-left: -0.3rem;
     font-size: 0.8rem;
   }
-  
-  .vehicle-status-icon {
-    margin-right: 0;
+  .vehicle-last-update {
+    display: flex;
+    align-items: center;
+    font-size: 0.8rem;
+    color: var(--color-slate);
+  }
+  .vehicle-last-update .material-symbols-rounded {
+    font-size: 1rem;
+    margin-right: 0.25rem;
   }
   
   .update-fresh {
