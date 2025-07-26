@@ -727,9 +727,11 @@ th.sortable {
     font-size: 1rem;
     margin-right: 0.25rem;
   }
-
-  /* ✨ Hide the subtitle on mobile view details page */
-  .detail-page-subtitle {
-    display: none;
+  
+  .update-fresh {
+    color: var(--color-success);
+  }
+  .update-stale {
+    color: var(--color-error);
   }
 }
