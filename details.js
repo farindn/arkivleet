@@ -20,7 +20,6 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
     
-    // Get device ID from URL
     const urlParams = new URLSearchParams(window.location.search);
     const deviceId = urlParams.get('id');
     if (!deviceId) {
@@ -29,7 +28,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
     
-    setupNavbar(); // From utils, assuming it's extended or copied
+    setupNavbar();
     showLoader();
 
     try {
@@ -122,7 +121,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /**
-   * populateDetails
+   * 📝 Fills the page with the fetched vehicle data.
    * @param {object} device The Device object.
    * @param {object} status The DeviceStatusInfo object.
    * @param {string} address The formatted address string.
@@ -134,12 +133,29 @@ document.addEventListener("DOMContentLoaded", () => {
         hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true,
     });
     
+    // Populate main title
     document.getElementById('vehicle-name-title').textContent = device.name || 'Vehicle Details';
+
+    // ✨ Populate new "Last Communicated" status under the title
+    const isCommunicating = status.isDeviceCommunicating;
+    const updateIcon = isCommunicating ? 'wifi' : 'wifi_off';
+    const updateColorClass = isCommunicating ? 'update-fresh' : 'update-stale';
+    const formattedDateTime = status.dateTime ? dateTimeFormatter.format(new Date(status.dateTime)) : 'N/A';
+    
+    const lastCommElement = document.getElementById('detail-page-last-comm');
+    lastCommElement.innerHTML = `
+      <span class="material-symbols-rounded ${updateColorClass}">${updateIcon}</span>
+      <span>Last communicated: </span>
+      <span class="${updateColorClass}">${formattedDateTime}</span>
+    `;
+    
+    // Populate status card
     document.getElementById('detail-address').textContent = address;
     document.getElementById('detail-coords').textContent = `${status.latitude.toFixed(5)}, ${status.longitude.toFixed(5)}`;
     document.getElementById('detail-speed').textContent = `${status.speed.toFixed(0)} km/h`;
     document.getElementById('detail-heading').textContent = getHeading(status.bearing);
-    document.getElementById('detail-last-comm').textContent = status.dateTime ? dateTimeFormatter.format(new Date(status.dateTime)) : 'N/A';
+    
+    // Populate asset info card
     document.getElementById('detail-vin').textContent = device.vehicleIdentificationNumber || '-';
     document.getElementById('detail-serial').textContent = device.serialNumber || '-';
     document.getElementById('detail-odometer').textContent = `${(status.odometer / 1000).toFixed(0)} km`;
