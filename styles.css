@@ -602,7 +602,10 @@ th.sortable {
     display: none;
   }
   .mobile-view {
-    display: block;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
   }
 
   /* Hide desktop columns on mobile */
@@ -632,27 +635,34 @@ th.sortable {
     justify-content: space-between;
     align-items: center;
   }
+  .dashboard-table td {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
   .dashboard-table td:first-child {
     flex-grow: 1;
   }
   .dashboard-table td:last-child {
     flex-shrink: 0;
+    padding-left: 0.5rem;
   }
 
   .vehicle-name {
     font-weight: 600;
     color: var(--color-primary);
     margin-bottom: 0.25rem;
+    font-size: 1rem;
   }
   .vehicle-serial {
-    margin-bottom: 0.5rem;
+    margin-bottom: 0;
     margin-left: -0.3rem;
     font-size: 0.8rem;
   }
-  .vehicle-last-update {
-    font-size: 0.8rem;
-    color: var(--color-slate);
+  
+  .vehicle-status-icon {
+    margin-right: 0;
   }
+  
   .update-fresh {
     color: var(--color-success);
   }
