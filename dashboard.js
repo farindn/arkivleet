@@ -238,7 +238,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const updateColorClass = isCommunicating ? 'update-fresh' : 'update-stale';
         const formattedDateTime = status.dateTime ? dateTimeFormatter.format(new Date(status.dateTime)) : "N/A";
         
-        const statusIconHTML = `<span class="material-symbols-rounded vehicle-list-icon ${updateColorClass}">${updateIcon}</span>`;
+        const statusIconHTML = `<span class="material-symbols-rounded ${updateColorClass}">${updateIcon}</span>`;
 
         const actionButtonHTML = `
           <button class="btn-action" data-id="${device.id}">
