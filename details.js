@@ -55,12 +55,22 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!deviceData || !statusData) {
         throw new Error("Could not retrieve vehicle data.");
       }
+      
+      // 3. Fetch driver name if a driver is assigned
+      let driverName = "No driver assigned";
+      if (statusData.driver?.id) {
+          const driverResult = await fetchFromGeotab("Get", { typeName: "User", search: { id: statusData.driver.id } }, credentials);
+          if (driverResult[0]) {
+              const driver = driverResult[0];
+              driverName = `${driver.firstName || ''} ${driver.lastName || ''}`.trim();
+          }
+      }
 
-      // 3. Fetch reverse geocoded address
+      // 4. Fetch reverse geocoded address
       const address = await getAddress(statusData.latitude, statusData.longitude);
 
-      // 4. Populate the page with all the data
-      populateDetails(deviceData, statusData, address);
+      // 5. Populate the page with all the data
+      populateDetails(deviceData, statusData, address, driverName);
 
     } catch (err) {
       console.error("Error loading details page:", err);
@@ -121,28 +131,29 @@ document.addEventListener("DOMContentLoaded", () => {
   /**
    * 📝 Fills the page with the fetched vehicle data.
    */
-  function populateDetails(device, status, address) {
+  function populateDetails(device, status, address, driverName) {
     const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
         timeZone: userTimeZoneId,
         year: 'numeric', month: 'short', day: 'numeric',
         hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true,
     });
     
-    // Title and Subtitle
     document.getElementById('vehicle-name-title').textContent = device.name || 'Vehicle Details';
+
     const isCommunicating = status.isDeviceCommunicating;
     const updateIcon = isCommunicating ? 'wifi' : 'wifi_off';
     const updateColorClass = isCommunicating ? 'update-fresh' : 'update-stale';
     const formattedDateTime = status.dateTime ? dateTimeFormatter.format(new Date(status.dateTime)) : 'N/A';
+    
     const lastCommElement = document.getElementById('detail-page-last-comm');
     lastCommElement.innerHTML = `
       <span class="material-symbols-rounded ${updateColorClass}">${updateIcon}</span>
-      <span>Last communicated: </span>
+      <span class="detail-subtitle-label">Last communicated:</span>
       <span class="${updateColorClass}">${formattedDateTime}</span>
     `;
     
     // Asset Information Card
-    document.getElementById('detail-driver').textContent = status.driver?.name || 'No driver assigned';
+    document.getElementById('detail-driver').textContent = driverName;
     document.getElementById('detail-vin').textContent = device.vehicleIdentificationNumber || '-';
     document.getElementById('detail-plate').textContent = device.licensePlate || '-';
     document.getElementById('detail-serial').textContent = device.serialNumber || '-';
@@ -153,7 +164,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Current Status Card
     const trackingColor = device.isActiveTrackingEnabled ? 'update-fresh' : 'update-stale';
     const drivingColor = status.isDriving ? 'update-fresh' : 'update-stale';
-    document.getElementById('detail-active-tracking').innerHTML = `<code class="code-block ${trackingColor}">${device.isActiveTrackingEnabled ? 'Yes' : 'No'}</code>`;
+    document.getElementById('detail-active-tracking').innerHTML = `<code class="code-block ${trackingColor}">${device.isActiveTrackingEnabled ? 'True' : 'False'}</code>`;
     document.getElementById('detail-address').textContent = address;
     document.getElementById('detail-coords').textContent = `${status.latitude.toFixed(5)}, ${status.longitude.toFixed(5)}`;
     document.getElementById('detail-driving').innerHTML = `<code class="code-block ${drivingColor}">${status.isDriving ? 'Yes' : 'No'}</code>`;
@@ -166,16 +177,24 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   
   /**
-   * 🗺️ Initializes the Leaflet map.
+   * 🗺️ Initializes the Leaflet map with a Street View link.
    */
   function initMap(lat, lon, deviceName) {
-    if (map) map.remove(); // Remove previous map instance if it exists
+    if (map) map.remove();
     map = L.map('map').setView([lat, lon], 15);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
+
+    const popupContent = `
+      <div class="map-popup">
+        <strong>${deviceName}</strong>
+        <a href="https://www.google.com/maps?q&layer=c&cbll=${lat},${lon}" target="_blank">Show Street View</a>
+      </div>
+    `;
+
     L.marker([lat, lon]).addTo(map)
-        .bindPopup(deviceName)
+        .bindPopup(popupContent)
         .openPopup();
   }
 });
