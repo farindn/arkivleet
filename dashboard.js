@@ -206,6 +206,7 @@ document.addEventListener("DOMContentLoaded", () => {
         typeName: "DeviceStatusInfo",
         search: {
           deviceSearch: {
+            fromDate: new Date().toISOString(),
             excludeUntrackedAssets: true // ✨ Using excludeUntrackedAssets as directed.
           }
         }
