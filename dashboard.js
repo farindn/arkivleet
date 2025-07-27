@@ -42,7 +42,10 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("user-timezone").textContent = userTimeZoneId;
 
       [allDevices, dailyTripData] = await Promise.all([
-        fetchFromGeotab("Get", { typeName: "Device" }, credentials),
+        fetchFromGeotab("Get", {
+          typeName: "Device",
+          search: { "fromDate": new Date().toISOString() } // ✨ Re-added mandatory filter
+        }, credentials),
         loadDailyTripData(userTimeZoneId),
       ]);
       document.getElementById("card-total").textContent = allDevices.length;
@@ -153,11 +156,12 @@ document.addEventListener("DOMContentLoaded", () => {
    */
   async function loadFleetSummary() {
     try {
+      // ✨ Added matching filter to ensure data consistency
       const statusInfo = await fetchFromGeotab("Get", {
         typeName: "DeviceStatusInfo",
         search: {
           deviceSearch: {
-            nowDate: new Date() // ✨ Ensures we only get statuses for currently active devices
+            fromDate: new Date().toISOString()
           }
         }
       }, credentials);
