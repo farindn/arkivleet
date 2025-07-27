@@ -73,7 +73,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const params = {
         typeName: "Device",
         search: {
-          fromDate: new Date().toISOString() // ✨ Using fromDate as directed.
+          fromDate: new Date().toISOString()
         }
       };
       if (fromVersion) {
@@ -206,8 +206,8 @@ document.addEventListener("DOMContentLoaded", () => {
         typeName: "DeviceStatusInfo",
         search: {
           deviceSearch: {
-            fromDate: new Date().toISOString(),
-            excludeUntrackedAssets: true // ✨ Using excludeUntrackedAssets as directed.
+            fromDate: new Date().toISOString(), // ✨ Using matching fromDate filter
+            excludeUntrackedAssets: true
           }
         }
       }, credentials);
