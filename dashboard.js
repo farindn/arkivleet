@@ -187,7 +187,6 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const filteredDevices = getFilteredAndSortedDevices();
       
-      // ✨ Calculate and display table info text
       const total = filteredDevices.length;
       const start = total > 0 ? (page - 1) * rowsPerPage + 1 : 0;
       const end = Math.min(start + rowsPerPage - 1, total);
@@ -201,12 +200,12 @@ document.addEventListener("DOMContentLoaded", () => {
       
       const pageDevices = filteredDevices.slice(start - 1, end);
       
-      if (pageDevices.length === 0 && total > 0) { // Fix for when search yields results but not on the current page
+      if (pageDevices.length === 0 && total > 0) {
         await renderTablePage(1);
         return;
       }
       if (total === 0) {
-        document.getElementById("vehicle-table-body").innerHTML = `<tr><td colspan="6">No vehicles found.</td></tr>`;
+        document.getElementById("vehicle-table-body").innerHTML = `<tr><td colspan="7">No vehicles found.</td></tr>`;
         updatePaginationControls(pageInfo);
         return;
       }
@@ -252,10 +251,11 @@ document.addEventListener("DOMContentLoaded", () => {
         row.classList.add("fade-in");
         
         row.innerHTML = `
+            <td class="status-col">${statusIconHTML}</td>
             <td>
               <div class="mobile-view">
                 <div class="mobile-view-info">
-                  <div class="vehicle-name">${statusIconHTML} ${device.name || "Unknown"}</div>
+                  <div class="vehicle-name">${device.name || "Unknown"}</div>
                   <div class="vehicle-serial"><code class="code-block">${serialNumber}</code></div>
                   <div class="vehicle-last-update">
                     <span class="material-symbols-rounded ${updateColorClass}">${updateIcon}</span>
@@ -264,7 +264,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 </div>
                 ${actionButtonHTML}
               </div>
-              <span class="desktop-view">${statusIconHTML} ${device.name || "Unknown"}</span>
+              <span class="desktop-view">${device.name || "Unknown"}</span>
             </td>
             <td><code class="code-block">${device.vehicleIdentificationNumber || "-"}</code></td>
             <td><code class="code-block">${serialNumber}</code></td>
