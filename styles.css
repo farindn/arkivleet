@@ -690,7 +690,8 @@ th.sortable {
     text-align: center;
     padding: 2rem;
     font-size: 0.9rem;
-    color: var(--color-slate);
+    background-color: var(--color-slate);
+    color: var(--color-white);
 }
 
 
