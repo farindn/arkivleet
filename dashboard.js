@@ -57,7 +57,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // 4. Asynchronously load fleet-wide summary data.
       loadFleetSummary();
       
-      // ✨ 5. Add a single event listener for all "Details" buttons.
+      // 5. Add a single event listener for all "Details" buttons.
       setupDetailsButtonListener();
 
     } catch (err) {
@@ -186,17 +186,26 @@ document.addEventListener("DOMContentLoaded", () => {
     showLoader();
     try {
       const filteredDevices = getFilteredAndSortedDevices();
+      
+      // ✨ Calculate and display table info text
+      const total = filteredDevices.length;
+      const start = total > 0 ? (page - 1) * rowsPerPage + 1 : 0;
+      const end = Math.min(start + rowsPerPage - 1, total);
+      document.getElementById('table-info-text').textContent = `Showing ${start} - ${end} of ${total}`;
+      
       const pageInfo = {
-        totalItems: filteredDevices.length,
-        totalPages: Math.ceil(filteredDevices.length / rowsPerPage),
+        totalItems: total,
+        totalPages: Math.ceil(total / rowsPerPage),
         currentPage: page
       };
       
-      const start = (page - 1) * rowsPerPage;
-      const end = start + rowsPerPage;
-      const pageDevices = filteredDevices.slice(start, end);
+      const pageDevices = filteredDevices.slice(start - 1, end);
       
-      if (pageDevices.length === 0) {
+      if (pageDevices.length === 0 && total > 0) { // Fix for when search yields results but not on the current page
+        await renderTablePage(1);
+        return;
+      }
+      if (total === 0) {
         document.getElementById("vehicle-table-body").innerHTML = `<tr><td colspan="6">No vehicles found.</td></tr>`;
         updatePaginationControls(pageInfo);
         return;
@@ -229,6 +238,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const updateIcon = isCommunicating ? 'wifi' : 'wifi_off';
         const updateColorClass = isCommunicating ? 'update-fresh' : 'update-stale';
         const formattedDateTime = status.dateTime ? dateTimeFormatter.format(new Date(status.dateTime)) : "N/A";
+        
+        const statusIconHTML = `<span class="material-symbols-rounded vehicle-list-icon ${updateColorClass}">${updateIcon}</span>`;
 
         const actionButtonHTML = `
           <button class="btn-action" data-id="${device.id}">
@@ -244,7 +255,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <td>
               <div class="mobile-view">
                 <div class="mobile-view-info">
-                  <div class="vehicle-name">${device.name || "Unknown"}</div>
+                  <div class="vehicle-name">${statusIconHTML} ${device.name || "Unknown"}</div>
                   <div class="vehicle-serial"><code class="code-block">${serialNumber}</code></div>
                   <div class="vehicle-last-update">
                     <span class="material-symbols-rounded ${updateColorClass}">${updateIcon}</span>
@@ -253,7 +264,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 </div>
                 ${actionButtonHTML}
               </div>
-              <span class="desktop-view">${device.name || "Unknown"}</span>
+              <span class="desktop-view">${statusIconHTML} ${device.name || "Unknown"}</span>
             </td>
             <td><code class="code-block">${device.vehicleIdentificationNumber || "-"}</code></td>
             <td><code class="code-block">${serialNumber}</code></td>
