@@ -64,29 +64,35 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /**
-   * ✨ Function to handle pagination and retrieve all devices.
+   * ✨ Corrected function to handle pagination and retrieve all devices.
    */
   async function fetchAllDevices(credentials) {
     let allResults = [];
-    let currentVersion = null;
+    let fromVersion = null;
     while (true) {
       const params = { typeName: "Device" };
-      if (currentVersion) {
-        params.fromVersion = currentVersion;
+      if (fromVersion) {
+        params.fromVersion = fromVersion;
       }
       const response = await fetchFromGeotabFeed("Get", params, credentials);
+      
       if (response.data && response.data.length > 0) {
         allResults.push(...response.data);
-        currentVersion = response.toVersion;
+        
+        // If the server sends back the same version token or no token, we're done.
+        if (!response.toVersion || response.toVersion === fromVersion) {
+          break;
+        }
+        fromVersion = response.toVersion;
       } else {
-        break;
+        break; // No more data, exit the loop.
       }
     }
     return allResults;
   }
 
   /**
-   * ✨ Corrected helper that returns both data and the version token.
+   * Helper that returns the full API result, including the version token.
    */
   async function fetchFromGeotabFeed(method, params, credentials) {
     const response = await fetch("https://my.geotab.com/apiv1", {
