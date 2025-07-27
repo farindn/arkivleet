@@ -64,13 +64,18 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /**
-   * ✨ Corrected function to handle pagination and retrieve all devices.
+   * ✨ Function to retrieve devices using pagination and the mandatory fromDate filter.
    */
   async function fetchAllDevices(credentials) {
     let allResults = [];
     let fromVersion = null;
     while (true) {
-      const params = { typeName: "Device" };
+      const params = {
+        typeName: "Device",
+        search: {
+          fromDate: new Date().toISOString() // ✨ Using fromDate as directed.
+        }
+      };
       if (fromVersion) {
         params.fromVersion = fromVersion;
       }
@@ -78,14 +83,12 @@ document.addEventListener("DOMContentLoaded", () => {
       
       if (response.data && response.data.length > 0) {
         allResults.push(...response.data);
-        
-        // If the server sends back the same version token or no token, we're done.
         if (!response.toVersion || response.toVersion === fromVersion) {
           break;
         }
         fromVersion = response.toVersion;
       } else {
-        break; // No more data, exit the loop.
+        break;
       }
     }
     return allResults;
@@ -203,8 +206,7 @@ document.addEventListener("DOMContentLoaded", () => {
         typeName: "DeviceStatusInfo",
         search: {
           deviceSearch: {
-            nowDate: new Date(),
-            excludeUntrackedAssets: true
+            excludeUntrackedAssets: true // ✨ Using excludeUntrackedAssets as directed.
           }
         }
       }, credentials);
