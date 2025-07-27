@@ -33,7 +33,6 @@ body {
   color: var(--color-primary);
 }
 
-/* ✨ Ensure form elements inherit the correct font */
 input,
 button,
 textarea,
@@ -467,7 +466,7 @@ select {
 
 .search-bar input {
   padding: 0.5rem 2.2rem 0.5rem 0.75rem;
-  font-size: 1rem; /* Changed from 0.95rem to prevent iOS zoom */
+  font-size: 1rem;
   border: 1px solid #cbd3dc;
   border-radius: 8px;
   outline: none;
@@ -707,6 +706,10 @@ th.sortable {
   .input-group label {
     font-size: 1rem;
   }
+  
+  .search-bar input {
+    padding: 0.5rem 2.2rem 0.5rem 0.75rem; /* Revert to desktop padding for consistency, but can be changed */
+  }
 
   .toast {
     font-size: 0.9rem;
@@ -781,7 +784,7 @@ th.sortable {
     font-size: 1rem;
     margin-right: 0.25rem;
   }
-
+  
   .update-fresh {
     color: var(--color-success);
   }
