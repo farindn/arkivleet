@@ -344,6 +344,16 @@ body {
   border-bottom: 1px solid #f0f0f0;
 }
 
+.dashboard-table thead .status-col {
+  width: 40px;
+  padding: 0.75rem;
+}
+
+.dashboard-table tbody .status-col {
+  padding-left: 1rem;
+  padding-right: 0;
+}
+
 .dashboard-table tbody tr:nth-child(even) {
   background-color: #f9fbfd;
 }
@@ -700,8 +710,12 @@ th.sortable {
     width: 100%;
   }
 
-  .dashboard-table th:not(:first-child),
-  .dashboard-table td:not(:first-child) {
+  .dashboard-table .status-col {
+    display: none;
+  }
+
+  .dashboard-table th:nth-child(n+3):not(:last-child),
+  .dashboard-table td:nth-child(n+3):not(:last-child) {
     display: none;
   }
 
@@ -721,8 +735,10 @@ th.sortable {
   }
 
   .dashboard-table td {
-    padding: 1rem;
     border-bottom: 1px solid #f0f0f0;
+  }
+  .dashboard-table tr:last-child td {
+    border-bottom: none;
   }
   
   .mobile-view-info {
@@ -750,12 +766,6 @@ th.sortable {
   }
   .vehicle-last-update .material-symbols-rounded {
     font-size: 1rem;
-    margin-right: 0.25rem;
-  }
-  
-  .vehicle-list-icon {
-    font-size: 1.2rem;
-    vertical-align: bottom;
     margin-right: 0.25rem;
   }
 
