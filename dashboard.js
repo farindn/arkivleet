@@ -64,7 +64,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /**
-   * ✨ New function to handle pagination and retrieve all devices.
+   * ✨ Function to handle pagination and retrieve all devices.
    */
   async function fetchAllDevices(credentials) {
     let allResults = [];
@@ -86,7 +86,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /**
-   * ✨ New helper that returns the full API result, including the version token.
+   * ✨ Corrected helper that returns both data and the version token.
    */
   async function fetchFromGeotabFeed(method, params, credentials) {
     const response = await fetch("https://my.geotab.com/apiv1", {
@@ -97,7 +97,10 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!response.ok) throw new Error(`API call failed: ${response.statusText}`);
     const json = await response.json();
     if (json.error) throw new Error(json.error.message || "Unknown API error");
-    return json.result || { data: [], toVersion: null };
+    return {
+      data: json.result || [],
+      toVersion: json.toVersion || null
+    };
   }
 
   /**
@@ -195,7 +198,7 @@ document.addEventListener("DOMContentLoaded", () => {
         search: {
           deviceSearch: {
             nowDate: new Date(),
-            excludeUntrackedAssets: true // ✨ Added filter
+            excludeUntrackedAssets: true
           }
         }
       }, credentials);
