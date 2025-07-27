@@ -476,7 +476,7 @@ select {
 }
 .map-popup a {
     display: block;
-    margin-top: 0.15rem;
+    margin-top: 0.5rem;
     color: var(--color-primary);
     text-decoration: none;
 }
@@ -488,6 +488,8 @@ select {
 }
 .leaflet-popup-content {
     font-family: 'IBM Plex Sans', sans-serif !important;
+    font-size: 0.9rem;
+    color: var(--color-primary);
 }
 .update-fresh {
     color: var(--color-success);
@@ -709,8 +711,7 @@ th.sortable {
     text-align: center;
     padding: 2rem;
     font-size: 0.9rem;
-    background-color: var(--color-slate);
-    color: var(--color-white);
+    color: var(--color-slate);
 }
 
 
@@ -852,12 +853,5 @@ th.sortable {
   .vehicle-last-update .material-symbols-rounded {
     font-size: 1rem;
     margin-right: 0.25rem;
-  }
-  
-  .update-fresh {
-    color: var(--color-success);
-  }
-  .update-stale {
-    color: var(--color-error);
   }
 }
