@@ -8,11 +8,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let allDevices = [];
   let dailyTripData = new Map();
-  let fullStatusData = []; // Holds status for all devices, for filtering
+  let fullStatusData = [];
   let userTimeZoneId = "UTC";
   let currentSortConfig = { column: "name", direction: "asc" };
   let currentSearchTerm = "";
-  let activeFilter = "all"; // "all", "communicating", "driving", "lessUtilized"
+  let activeFilter = "all";
   const rowsPerPage = 10;
 
   // --- INITIALIZATION ---
@@ -42,10 +42,7 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("user-timezone").textContent = userTimeZoneId;
 
       [allDevices, dailyTripData] = await Promise.all([
-        fetchFromGeotab("Get", {
-          typeName: "Device",
-          search: { "fromDate": new Date().toISOString() } // ✨ Re-added mandatory filter
-        }, credentials),
+        fetchAllDevices(credentials),
         loadDailyTripData(userTimeZoneId),
       ]);
       document.getElementById("card-total").textContent = allDevices.length;
@@ -67,7 +64,44 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /**
-   * 🌐 Generic wrapper for making API calls to MyGeotab.
+   * ✨ New function to handle pagination and retrieve all devices.
+   */
+  async function fetchAllDevices(credentials) {
+    let allResults = [];
+    let currentVersion = null;
+    while (true) {
+      const params = { typeName: "Device" };
+      if (currentVersion) {
+        params.fromVersion = currentVersion;
+      }
+      const response = await fetchFromGeotabFeed("Get", params, credentials);
+      if (response.data && response.data.length > 0) {
+        allResults.push(...response.data);
+        currentVersion = response.toVersion;
+      } else {
+        break;
+      }
+    }
+    return allResults;
+  }
+
+  /**
+   * ✨ New helper that returns the full API result, including the version token.
+   */
+  async function fetchFromGeotabFeed(method, params, credentials) {
+    const response = await fetch("https://my.geotab.com/apiv1", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ method, params: { ...params, credentials } }),
+    });
+    if (!response.ok) throw new Error(`API call failed: ${response.statusText}`);
+    const json = await response.json();
+    if (json.error) throw new Error(json.error.message || "Unknown API error");
+    return json.result || { data: [], toVersion: null };
+  }
+
+  /**
+   * 🌐 Generic wrapper for making simple API calls.
    */
   async function fetchFromGeotab(method, params, credentials) {
     const response = await fetch("https://my.geotab.com/apiv1", {
@@ -156,12 +190,12 @@ document.addEventListener("DOMContentLoaded", () => {
    */
   async function loadFleetSummary() {
     try {
-      // ✨ Added matching filter to ensure data consistency
       const statusInfo = await fetchFromGeotab("Get", {
         typeName: "DeviceStatusInfo",
         search: {
           deviceSearch: {
-            fromDate: new Date().toISOString()
+            nowDate: new Date(),
+            excludeUntrackedAssets: true // ✨ Added filter
           }
         }
       }, credentials);
