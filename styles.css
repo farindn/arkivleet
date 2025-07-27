@@ -352,6 +352,12 @@ body {
 .dashboard-table tbody .status-col {
   padding-left: 1rem;
   padding-right: 0;
+  vertical-align: middle;
+}
+
+.dashboard-table .status-col .material-symbols-rounded {
+  font-size: 18px;
+  margin: 0;
 }
 
 .dashboard-table tbody tr:nth-child(even) {
@@ -714,8 +720,8 @@ th.sortable {
     display: none;
   }
 
-  .dashboard-table th:nth-child(n+3):not(:last-child),
-  .dashboard-table td:nth-child(n+3):not(:last-child) {
+  .dashboard-table th:not(:nth-child(2)),
+  .dashboard-table td:not(:nth-child(2)) {
     display: none;
   }
 
