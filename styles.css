@@ -126,7 +126,8 @@ select {
 🔘 BUTTONS
 --------------------------------------------------------- */
 .btn-primary,
-.btn-secondary {
+.btn-secondary,
+.pagination button {
   padding: 0.8rem;
   border: none;
   border-radius: 12px;
@@ -419,6 +420,11 @@ select {
 }
 .detail-label {
     color: var(--color-slate);
+    margin-right: 1rem;
+    flex-shrink: 0;
+}
+.detail-value {
+    text-align: right;
 }
 .detail-page-subtitle {
     margin-top: 0;
@@ -441,6 +447,15 @@ select {
     height: 250px;
     border-radius: 8px;
     margin-bottom: 1rem;
+}
+.map-popup a {
+    display: block;
+    margin-top: 0.5rem;
+    color: var(--color-primary);
+    text-decoration: none;
+}
+.map-popup a:hover {
+    text-decoration: underline;
 }
 .update-fresh {
     color: var(--color-success);
@@ -797,12 +812,5 @@ th.sortable {
   .vehicle-last-update .material-symbols-rounded {
     font-size: 1rem;
     margin-right: 0.25rem;
-  }
-  
-  .update-fresh {
-    color: var(--color-success);
-  }
-  .update-stale {
-    color: var(--color-error);
   }
 }
