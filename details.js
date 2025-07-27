@@ -6,6 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
     database: sessionStorage.getItem("database"),
   };
   let userTimeZoneId = "UTC";
+  let map = null; // To hold the map instance
 
   // --- INITIALIZATION ---
   initializeDetailsPage();
@@ -90,13 +91,10 @@ document.addEventListener("DOMContentLoaded", () => {
   async function getAddress(lat, lon) {
     if (lat === 0 && lon === 0) return "No location data";
     try {
-      const addressResult = await fetchFromGeotab("Get", {
-        typeName: "Address",
-        search: {
-          coordinate: { x: lon, y: lat }
-        }
+      const addresses = await fetchFromGeotab("GetAddresses", {
+        coordinates: [{ x: lon, y: lat }]
       }, credentials);
-      return addressResult || "Address not found";
+      return addresses[0]?.formattedAddress || "Address not found";
     } catch (err) {
       console.error("Reverse geocoding failed:", err);
       return "Could not retrieve address";
@@ -122,9 +120,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   /**
    * 📝 Fills the page with the fetched vehicle data.
-   * @param {object} device The Device object.
-   * @param {object} status The DeviceStatusInfo object.
-   * @param {string} address The formatted address string.
    */
   function populateDetails(device, status, address) {
     const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
@@ -133,40 +128,54 @@ document.addEventListener("DOMContentLoaded", () => {
         hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true,
     });
     
+    // Title and Subtitle
     document.getElementById('vehicle-name-title').textContent = device.name || 'Vehicle Details';
-
     const isCommunicating = status.isDeviceCommunicating;
     const updateIcon = isCommunicating ? 'wifi' : 'wifi_off';
     const updateColorClass = isCommunicating ? 'update-fresh' : 'update-stale';
     const formattedDateTime = status.dateTime ? dateTimeFormatter.format(new Date(status.dateTime)) : 'N/A';
-    
     const lastCommElement = document.getElementById('detail-page-last-comm');
     lastCommElement.innerHTML = `
       <span class="material-symbols-rounded ${updateColorClass}">${updateIcon}</span>
-      <span class="detail-subtitle-label">Last communicated:</span>
+      <span>Last communicated: </span>
       <span class="${updateColorClass}">${formattedDateTime}</span>
     `;
     
-    // Populate status card
+    // Asset Information Card
+    document.getElementById('detail-driver').textContent = status.driver?.name || 'No driver assigned';
+    document.getElementById('detail-vin').textContent = device.vehicleIdentificationNumber || '-';
+    document.getElementById('detail-plate').textContent = device.licensePlate || '-';
+    document.getElementById('detail-serial').textContent = device.serialNumber || '-';
+    document.getElementById('detail-device-tz').textContent = device.timeZoneId || '-';
+    document.getElementById('detail-device-type').textContent = device.deviceType || '-';
+    document.getElementById('detail-rate-plan').textContent = device.devicePlanBillingInfo?.[0]?.devicePlanName || '-';
+
+    // Current Status Card
+    const trackingColor = device.isActiveTrackingEnabled ? 'update-fresh' : 'update-stale';
+    const drivingColor = status.isDriving ? 'update-fresh' : 'update-stale';
+    document.getElementById('detail-active-tracking').innerHTML = `<code class="code-block ${trackingColor}">${device.isActiveTrackingEnabled ? 'Yes' : 'No'}</code>`;
     document.getElementById('detail-address').textContent = address;
     document.getElementById('detail-coords').textContent = `${status.latitude.toFixed(5)}, ${status.longitude.toFixed(5)}`;
+    document.getElementById('detail-driving').innerHTML = `<code class="code-block ${drivingColor}">${status.isDriving ? 'Yes' : 'No'}</code>`;
     document.getElementById('detail-speed').textContent = `${status.speed.toFixed(0)} km/h`;
-    document.getElementById('detail-heading').textContent = getHeading(status.bearing);
-    
-    // Populate asset info card
-    document.getElementById('detail-vin').textContent = device.vehicleIdentificationNumber || '-';
-    document.getElementById('detail-serial').textContent = device.serialNumber || '-';
-    document.getElementById('detail-odometer').textContent = `${(status.odometer / 1000).toFixed(0)} km`;
+
+    // Initialize map
+    if (status.latitude !== 0 && status.longitude !== 0) {
+      initMap(status.latitude, status.longitude, device.name);
+    }
   }
   
   /**
-   * 🧭 Converts a bearing in degrees to a cardinal direction.
-   * @param {number} bearing The bearing in degrees (0-359).
-   * @returns {string} The cardinal direction (e.g., "North", "SW").
+   * 🗺️ Initializes the Leaflet map.
    */
-  function getHeading(bearing) {
-    const directions = ['North', 'NE', 'East', 'SE', 'South', 'SW', 'West', 'NW'];
-    const index = Math.round(bearing / 45) % 8;
-    return directions[index];
+  function initMap(lat, lon, deviceName) {
+    if (map) map.remove(); // Remove previous map instance if it exists
+    map = L.map('map').setView([lat, lon], 15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+    L.marker([lat, lon]).addTo(map)
+        .bindPopup(deviceName)
+        .openPopup();
   }
 });
