@@ -457,7 +457,7 @@ select {
 }
 .map-popup a {
     display: block;
-    margin-top: 0.5rem;
+    margin-top: 0.15rem;
     color: var(--color-primary);
     text-decoration: none;
 }
