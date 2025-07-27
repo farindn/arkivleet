@@ -86,13 +86,16 @@
       <h2 class="section-title">Vehicle List</h2>
 
       <div class="search-bar">
-        <input type="text" id="searchInput" placeholder="Search..." />
-        <span class="material-symbols-rounded search-icon">search</span>
+        <span id="table-info-text"></span>
+        <div class="search-input-container">
+          <input type="text" id="searchInput" placeholder="Search..." />
+          <span class="material-symbols-rounded search-icon">search</span>
+        </div>
       </div>
 
       <div class="table-wrapper">
         <table>
-          <thead style="background-color: var(--color-primary)">
+          <thead>
             <tr>
               <th class="sortable" data-column="name">Name <span class="sort-icon"></span></th>
               <th class="sortable" data-column="vehicleIdentificationNumber">VIN <span class="sort-icon"></span></th>
