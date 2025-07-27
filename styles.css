@@ -708,7 +708,7 @@ th.sortable {
   }
   
   .search-bar input {
-    padding: 0.5rem 2.2rem 0.5rem 0.75rem; /* Revert to desktop padding for consistency, but can be changed */
+    padding: 0.5rem 0.5rem 0.5rem 0.75rem; /* Revert to desktop padding for consistency, but can be changed */
   }
 
   .toast {
