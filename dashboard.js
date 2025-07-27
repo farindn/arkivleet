@@ -201,6 +201,11 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const statusInfo = await fetchFromGeotab("Get", {
         typeName: "DeviceStatusInfo",
+        search: {
+          deviceSearch: {
+            excludeUntrackedAssets: true
+          }
+        }
       }, credentials);
       fullStatusData = statusInfo;
       
