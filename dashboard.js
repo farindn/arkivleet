@@ -42,10 +42,7 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("user-timezone").textContent = userTimeZoneId;
 
       [allDevices, dailyTripData] = await Promise.all([
-        fetchFromGeotab("Get", {
-          typeName: "Device",
-          search: { "fromDate": new Date().toISOString() }
-        }, credentials),
+        fetchFromGeotab("Get", { typeName: "Device" }, credentials),
         loadDailyTripData(userTimeZoneId),
       ]);
       document.getElementById("card-total").textContent = allDevices.length;
@@ -53,7 +50,7 @@ document.addEventListener("DOMContentLoaded", () => {
       setupTableControls();
       await renderTablePage(1);
       
-      loadFleetSummary(); // This will also populate fullStatusData
+      loadFleetSummary();
       setupCardListeners();
       setupDetailsButtonListener();
 
@@ -156,8 +153,15 @@ document.addEventListener("DOMContentLoaded", () => {
    */
   async function loadFleetSummary() {
     try {
-      const statusInfo = await fetchFromGeotab("Get", { typeName: "DeviceStatusInfo" }, credentials);
-      fullStatusData = statusInfo; // Store full data for filtering
+      const statusInfo = await fetchFromGeotab("Get", {
+        typeName: "DeviceStatusInfo",
+        search: {
+          deviceSearch: {
+            nowDate: new Date() // ✨ Ensures we only get statuses for currently active devices
+          }
+        }
+      }, credentials);
+      fullStatusData = statusInfo;
       
       const communicatingDevices = statusInfo.filter(s => s.isDeviceCommunicating);
       
