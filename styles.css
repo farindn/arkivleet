@@ -366,7 +366,6 @@ body {
 .page-header {
   margin-bottom: 0;
 }
-/* ✨ Specific override for the details page title */
 .page-header .section-title {
     padding-bottom: 0;
     margin-bottom: 0.5rem;
@@ -428,10 +427,18 @@ body {
 --------------------------------------------------------- */
 .search-bar {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   align-items: center;
   margin-bottom: 0.75rem;
+}
+
+.search-input-container {
   position: relative;
+}
+
+#table-info-text {
+  font-size: 0.9rem;
+  color: var(--color-slate);
 }
 
 .search-bar input {
@@ -445,6 +452,9 @@ body {
 .search-bar .search-icon {
   position: absolute;
   right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-right: 0;
   color: var(--color-slate);
   pointer-events: none;
 }
@@ -712,6 +722,7 @@ th.sortable {
 
   .dashboard-table td {
     padding: 1rem;
+    border-bottom: 1px solid #f0f0f0;
   }
   
   .mobile-view-info {
@@ -719,6 +730,8 @@ th.sortable {
   }
   
   .vehicle-name {
+    display: flex;
+    align-items: center;
     font-weight: 600;
     color: var(--color-primary);
     margin-bottom: 0.25rem;
@@ -738,5 +751,18 @@ th.sortable {
   .vehicle-last-update .material-symbols-rounded {
     font-size: 1rem;
     margin-right: 0.25rem;
+  }
+  
+  .vehicle-list-icon {
+    font-size: 1.2rem;
+    vertical-align: bottom;
+    margin-right: 0.25rem;
+  }
+
+  .update-fresh {
+    color: var(--color-success);
+  }
+  .update-stale {
+    color: var(--color-error);
   }
 }
