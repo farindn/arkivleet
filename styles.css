@@ -33,6 +33,15 @@ body {
   color: var(--color-primary);
 }
 
+/* ✨ Ensure form elements inherit the correct font */
+input,
+button,
+textarea,
+select {
+  font-family: inherit;
+}
+
+
 /* ---------------------------------------------------------
 🔐 LOGIN PAGE
 --------------------------------------------------------- */
@@ -158,7 +167,6 @@ body {
   align-items: center;
   gap: 0.25rem;
   font-size: 0.85rem;
-  font-family: 'IBM Plex Sans', sans-serif;
   transition: background-color 0.2s, color 0.2s;
 }
 
@@ -459,7 +467,7 @@ body {
 
 .search-bar input {
   padding: 0.5rem 2.2rem 0.5rem 0.75rem;
-  font-size: 0.95rem;
+  font-size: 1rem; /* Changed from 0.95rem to prevent iOS zoom */
   border: 1px solid #cbd3dc;
   border-radius: 8px;
   outline: none;
@@ -615,7 +623,6 @@ th.sortable {
   text-align: left;
   color: var(--color-primary);
   font-size: 0.9rem;
-  font-family: 'IBM Plex Sans', sans-serif;
   cursor: pointer;
 }
 
