@@ -8,9 +8,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let allDevices = [];
   let dailyTripData = new Map();
-  let userTimeZoneId = "UTC"; // Default to UTC
+  let fullStatusData = []; // Holds status for all devices, for filtering
+  let userTimeZoneId = "UTC";
   let currentSortConfig = { column: "name", direction: "asc" };
   let currentSearchTerm = "";
+  let activeFilter = "all"; // "all", "communicating", "driving", "lessUtilized"
   const rowsPerPage = 10;
 
   // --- INITIALIZATION ---
@@ -30,7 +32,6 @@ document.addEventListener("DOMContentLoaded", () => {
     showLoader();
 
     try {
-      // 1. Fetch user's timezone first.
       const userResult = await fetchFromGeotab("Get", {
         typeName: "User",
         search: { name: credentials.userName },
@@ -40,7 +41,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       document.getElementById("user-timezone").textContent = userTimeZoneId;
 
-      // 2. Fetch all devices and daily trip data concurrently, using the new timezone.
       [allDevices, dailyTripData] = await Promise.all([
         fetchFromGeotab("Get", {
           typeName: "Device",
@@ -50,14 +50,11 @@ document.addEventListener("DOMContentLoaded", () => {
       ]);
       document.getElementById("card-total").textContent = allDevices.length;
       
-      // 3. Setup table and render the first page.
       setupTableControls();
       await renderTablePage(1);
-
-      // 4. Asynchronously load fleet-wide summary data.
-      loadFleetSummary();
       
-      // 5. Add a single event listener for all "Details" buttons.
+      loadFleetSummary(); // This will also populate fullStatusData
+      setupCardListeners();
       setupDetailsButtonListener();
 
     } catch (err) {
@@ -160,6 +157,8 @@ document.addEventListener("DOMContentLoaded", () => {
   async function loadFleetSummary() {
     try {
       const statusInfo = await fetchFromGeotab("Get", { typeName: "DeviceStatusInfo" }, credentials);
+      fullStatusData = statusInfo; // Store full data for filtering
+      
       const communicatingDevices = statusInfo.filter(s => s.isDeviceCommunicating);
       
       let lessUtilizedCount = 0;
@@ -288,12 +287,10 @@ document.addEventListener("DOMContentLoaded", () => {
    * 🎛️ Sets up event listeners for search, sort, and pagination.
    */
   function setupTableControls() {
-    // Search
     document.getElementById("searchInput").addEventListener("input", (e) => {
         currentSearchTerm = e.target.value;
         renderTablePage(1);
     });
-    // Sorting
     document.querySelectorAll("th.sortable").forEach(header => {
       header.addEventListener("click", () => {
         const column = header.dataset.column;
@@ -308,8 +305,32 @@ document.addEventListener("DOMContentLoaded", () => {
         renderTablePage(1);
       });
     });
-    // Set initial sort icon
     document.querySelector(`th[data-column='name'] .sort-icon`).textContent = '▲';
+  }
+
+  /**
+   * 🃏 Adds click listeners to the summary cards to filter the table.
+   */
+  function setupCardListeners() {
+    const cardFilters = {
+        'card-total': 'all',
+        'card-comm': 'communicating',
+        'card-driving': 'driving',
+        'card-less-utilized': 'lessUtilized'
+    };
+    document.querySelectorAll('.card').forEach(card => {
+        const statElement = card.querySelector('.stat-number');
+        if (statElement && cardFilters[statElement.id]) {
+            card.classList.add('clickable');
+            card.addEventListener('click', () => {
+                activeFilter = cardFilters[statElement.id];
+                document.querySelectorAll('.card.clickable').forEach(c => c.classList.remove('active'));
+                card.classList.add('active');
+                renderTablePage(1);
+            });
+        }
+    });
+    document.querySelector('#card-total').closest('.card').classList.add('active');
   }
 
   /**
@@ -352,15 +373,38 @@ document.addEventListener("DOMContentLoaded", () => {
    * 📦 Returns a filtered and sorted list of devices based on current state.
    */
   function getFilteredAndSortedDevices() {
-    let filtered = [...allDevices];
+    let baseList = [...allDevices];
+
+    // 1. Apply active card filter
+    if (activeFilter !== 'all') {
+      const statusMap = new Map(fullStatusData.map(s => [s.device.id, s]));
+      const communicatingDeviceIds = new Set(
+        fullStatusData.filter(s => s.isDeviceCommunicating).map(s => s.device.id)
+      );
+
+      if (activeFilter === 'communicating') {
+        baseList = allDevices.filter(d => communicatingDeviceIds.has(d.id));
+      } else if (activeFilter === 'driving') {
+        baseList = allDevices.filter(d => statusMap.get(d.id)?.isDriving);
+      } else if (activeFilter === 'lessUtilized') {
+        baseList = allDevices.filter(d => 
+          communicatingDeviceIds.has(d.id) && (dailyTripData.get(d.id) || 0) < 10
+        );
+      }
+    }
+
+    // 2. Apply search term filter
+    let filtered = [...baseList];
     if (currentSearchTerm) {
       const lowercasedTerm = currentSearchTerm.toLowerCase();
-      filtered = allDevices.filter(d =>
+      filtered = baseList.filter(d =>
         (d.name || "").toLowerCase().includes(lowercasedTerm) ||
         (d.vehicleIdentificationNumber || "").toLowerCase().includes(lowercasedTerm) ||
         (d.serialNumber || "").toLowerCase().includes(lowercasedTerm)
       );
     }
+
+    // 3. Sort the results
     filtered.sort((a, b) => {
         const valA = a[currentSortConfig.column]?.toLowerCase?.() || a[currentSortConfig.column] || "";
         const valB = b[currentSortConfig.column]?.toLowerCase?.() || b[currentSortConfig.column] || "";
@@ -368,6 +412,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (valA > valB) return currentSortConfig.direction === 'asc' ? 1 : -1;
         return 0;
     });
+    
     return filtered;
   }
 });
