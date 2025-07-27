@@ -437,6 +437,11 @@ select {
 .detail-subtitle-label {
     margin-right: 0.3rem;
 }
+#map {
+    height: 250px;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
 .update-fresh {
     color: var(--color-success);
 }
@@ -717,7 +722,7 @@ th.sortable {
 
   .search-bar input {
     width: 87px;
-    flex-grow: 0; /* Override flex-grow to use fixed width */
+    flex-grow: 0;
   }
 
   .toast {
