@@ -455,31 +455,34 @@ select {
   margin-bottom: 0.75rem;
 }
 
-.search-input-container {
-  position: relative;
-}
-
 #table-info-text {
   font-size: 0.9rem;
   color: var(--color-slate);
 }
 
-.search-bar input {
-  padding: 0.5rem 2.2rem 0.5rem 0.75rem;
-  font-size: 1rem;
+.search-input-container {
+  display: flex;
+  align-items: center;
   border: 1px solid #cbd3dc;
   border-radius: 8px;
+  background-color: var(--color-white);
+}
+
+.search-bar input {
+  flex-grow: 1;
+  border: none;
+  background: transparent;
+  padding: 0.5rem 0.5rem 0.5rem 0.75rem;
+  font-size: 1rem;
   outline: none;
 }
 
 .search-bar .search-icon {
-  position: absolute;
-  right: 0.75rem;
-  top: 50%;
-  transform: translateY(-50%);
-  margin-right: 0;
+  position: static;
+  transform: none;
+  margin: 0;
+  padding: 0 0.75rem;
   color: var(--color-slate);
-  pointer-events: none;
 }
 
 /* ---------------------------------------------------------
@@ -707,8 +710,8 @@ th.sortable {
     font-size: 1rem;
   }
   
-  .search-bar input {
-    padding: 0.5rem 0.5rem 0.5rem 0.75rem; /* Revert to desktop padding for consistency, but can be changed */
+  .search-input-container {
+    width: 135px;
   }
 
   .toast {
