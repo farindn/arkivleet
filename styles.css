@@ -307,17 +307,22 @@ select {
 
 .card.clickable {
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s, background-color 0.2s;
 }
 .card.clickable:hover {
   transform: translateY(-4px);
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 .card.active {
-  border-color: var(--color-accent);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  background-color: var(--color-primary);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
+.card.active p,
+.card.active .stat-number,
+.card.active .material-symbols-rounded {
+    color: var(--color-white);
+}
 
 .card:nth-child(1) { animation-delay: 0s; }
 .card:nth-child(2) { animation-delay: 0.1s; }
@@ -327,7 +332,6 @@ select {
 .card p {
   font-size: 0.95rem;
   color: var(--color-slate);
-  margin-bottom: 0.25rem;
 }
 
 .card .stat-number {
@@ -472,7 +476,7 @@ select {
 }
 .map-popup a {
     display: block;
-    margin-top: 0.5rem;
+    margin-top: 0.15rem;
     color: var(--color-primary);
     text-decoration: none;
 }
@@ -705,7 +709,8 @@ th.sortable {
     text-align: center;
     padding: 2rem;
     font-size: 0.9rem;
-    color: var(--color-slate);
+    background-color: var(--color-slate);
+    color: var(--color-white);
 }
 
 
@@ -847,5 +852,12 @@ th.sortable {
   .vehicle-last-update .material-symbols-rounded {
     font-size: 1rem;
     margin-right: 0.25rem;
+  }
+  
+  .update-fresh {
+    color: var(--color-success);
+  }
+  .update-stale {
+    color: var(--color-error);
   }
 }
