@@ -265,9 +265,9 @@ body {
 .section-title {
   font-size: 1.25rem;
   font-weight: 600;
-  padding-bottom: 0;
-  margin-bottom: 0.5rem;
-  border-bottom: none;
+  padding-bottom: 0.75rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid #e1e5eb;
 }
 
 /* ---------------------------------------------------------
@@ -365,6 +365,12 @@ body {
 --------------------------------------------------------- */
 .page-header {
   margin-bottom: 0;
+}
+/* ✨ Specific override for the details page title */
+.page-header .section-title {
+    padding-bottom: 0;
+    margin-bottom: 0.5rem;
+    border-bottom: none;
 }
 .details-grid {
     display: grid;
@@ -652,6 +658,9 @@ th.sortable {
 
   .section-title {
     font-size: 1.2rem;
+  }
+  
+  .page-header .section-title {
     padding-bottom: 0.5rem;
   }
 
