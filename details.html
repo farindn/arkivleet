@@ -8,6 +8,9 @@
   <link rel="stylesheet" href="styles.css" />
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded" rel="stylesheet" />
   <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/1048/1048313.png" type="image/png" />
+  
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 </head>
 <body>
   <div class="loader-overlay" id="loader-overlay">
@@ -53,9 +56,45 @@
 
     <section class="details-grid">
       <div class="details-card">
-        <h2 class="details-card-title">Current Status</h2>
+        <h2 class="details-card-title">Asset Information</h2>
         <div class="detail-item">
-          <span class="detail-label">Location</span>
+          <span class="detail-label">Driver</span>
+          <span class="detail-value" id="detail-driver">--</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">VIN</span>
+          <span class="detail-value"><code class="code-block" id="detail-vin">--</code></span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">License Plate</span>
+            <span class="detail-value"><code class="code-block" id="detail-plate">--</code></span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Serial Number</span>
+          <span class="detail-value"><code class="code-block" id="detail-serial">--</code></span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Device Time Zone</span>
+            <span class="detail-value" id="detail-device-tz">--</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Device Type</span>
+            <span class="detail-value" id="detail-device-type">--</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Rate Plan</span>
+            <span class="detail-value" id="detail-rate-plan">--</span>
+        </div>
+      </div>
+      <div class="details-card">
+        <h2 class="details-card-title">Current Status</h2>
+        <div id="map"></div>
+        <div class="detail-item">
+            <span class="detail-label">Active Tracking</span>
+            <span class="detail-value" id="detail-active-tracking">--</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Address</span>
           <span class="detail-value" id="detail-address">--</span>
         </div>
         <div class="detail-item">
@@ -63,27 +102,12 @@
           <span class="detail-value"><code class="code-block" id="detail-coords">--</code></span>
         </div>
         <div class="detail-item">
+            <span class="detail-label">Driving</span>
+            <span class="detail-value" id="detail-driving">--</span>
+        </div>
+        <div class="detail-item">
           <span class="detail-label">Speed</span>
           <span class="detail-value" id="detail-speed">--</span>
-        </div>
-        <div class="detail-item">
-          <span class="detail-label">Heading</span>
-          <span class="detail-value" id="detail-heading">--</span>
-        </div>
-      </div>
-      <div class="details-card">
-        <h2 class="details-card-title">Asset Information</h2>
-        <div class="detail-item">
-          <span class="detail-label">VIN</span>
-          <span class="detail-value"><code class="code-block" id="detail-vin">--</code></span>
-        </div>
-        <div class="detail-item">
-          <span class="detail-label">Serial Number</span>
-          <span class="detail-value"><code class="code-block" id="detail-serial">--</code></span>
-        </div>
-        <div class="detail-item">
-          <span class="detail-label">Odometer</span>
-          <span class="detail-value" id="detail-odometer">--</span>
         </div>
       </div>
     </section>
