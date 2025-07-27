@@ -472,9 +472,10 @@ select {
   flex-grow: 1;
   border: none;
   background: transparent;
-  padding: 0.5rem 0.5rem 0.5rem 0.75rem;
+  padding: 0.5rem 0rem 0.5rem 0.75rem;
   font-size: 1rem;
   outline: none;
+  width: auto;
 }
 
 .search-bar .search-icon {
@@ -712,6 +713,11 @@ th.sortable {
   
   .search-input-container {
     width: 135px;
+  }
+
+  .search-bar input {
+    width: 87px;
+    flex-grow: 0; /* Override flex-grow to use fixed width */
   }
 
   .toast {
