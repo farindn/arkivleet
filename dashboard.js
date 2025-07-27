@@ -202,6 +202,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const statusInfo = await fetchFromGeotab("Get", {
         typeName: "DeviceStatusInfo",
         search: {
+          fromDate: new Date().toISOString(),
           deviceSearch: {
             excludeUntrackedAssets: true
           }
