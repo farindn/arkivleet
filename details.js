@@ -189,7 +189,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const popupContent = `
       <div class="map-popup">
         <strong>${deviceName}</strong>
-        <a href="https://www.google.com/maps?q&layer=c&cbll=${lat},${lon}" target="_blank">Show Street View</a>
+        <a href="https://www.google.com/maps?q&layer=c&cbll=${lat},${lon}" target="_blank">Show street view</a>
       </div>
     `;
 
