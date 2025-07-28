@@ -73,7 +73,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const params = {
         typeName: "Device",
         search: {
-          nowDate: new Date() // ✨ Using nowDate to get all active devices.
+          fromDate: new Date() // ✨ Using nowDate to get all active devices.
         }
       };
       if (fromVersion) {
