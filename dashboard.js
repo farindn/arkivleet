@@ -73,7 +73,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const params = {
         typeName: "Device",
         search: {
-          fromDate: new Date()
+          fromDate: new Date(),
           activeTo: null // ✨ Using activeTo: null to get non-archived devices.
         }
       };
