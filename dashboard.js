@@ -64,12 +64,12 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /**
-   * ✨ Updated function to retrieve all devices using sort/offset pagination.
+   * ✨ Retrieves all devices using sort/offset pagination as specified.
    */
   async function fetchAllDevices(credentials) {
     let allResults = [];
-    const resultsLimit = 5000; // Fetch in chunks of 5000
-    let lastName = null;
+    const resultsLimit = 5000;
+    let offsetName = null;
     let lastId = null;
 
     while (true) {
@@ -85,8 +85,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       };
 
-      if (lastName !== null) {
-        params.sort.offset = lastName;
+      if (offsetName !== null) {
+        params.sort.offset = offsetName;
         params.sort.lastId = lastId;
       }
 
@@ -100,7 +100,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         
         const lastDevice = devices[devices.length - 1];
-        lastName = lastDevice.name;
+        offsetName = lastDevice.name;
         lastId = lastDevice.id;
       } else {
         break; // No more results
@@ -203,6 +203,7 @@ document.addEventListener("DOMContentLoaded", () => {
         typeName: "DeviceStatusInfo",
         search: {
           deviceSearch: {
+            fromDate: new Date().toISOString(),
             excludeUntrackedAssets: true
           }
         }
