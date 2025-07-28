@@ -41,11 +41,12 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       document.getElementById("user-timezone").textContent = userTimeZoneId;
 
-      [allDevices, dailyTripData] = await Promise.all([
-        fetchAllDevices(credentials),
-        loadDailyTripData(userTimeZoneId),
-      ]);
+      // ✨ Fetch devices first, as trip data depends on it
+      allDevices = await fetchAllDevices(credentials);
       document.getElementById("card-total").textContent = allDevices.length;
+      
+      // ✨ Now fetch trip data
+      dailyTripData = await loadDailyTripData(userTimeZoneId);
       
       setupTableControls();
       await renderTablePage(1);
@@ -64,49 +65,52 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /**
-   * ✨ Corrected function to retrieve all devices using sort/offset pagination.
+   * Retrieves all active devices using pagination.
    */
   async function fetchAllDevices(credentials) {
     let allResults = [];
-    const resultsLimit = 5000; // Fetch in chunks of 5000
-    let offsetName = null;
-    let lastId = null;
-
+    let fromVersion = null;
     while (true) {
       const params = {
         typeName: "Device",
         search: {
-          fromDate: new Date().toISOString()
-        },
-        resultsLimit: resultsLimit,
-        sort: {
-          sortBy: "name",
-          sortDirection: "asc"
+          nowDate: new Date()
         }
       };
-
-      if (offsetName !== null) {
-        params.sort.offset = offsetName;
-        params.sort.lastId = lastId;
+      if (fromVersion) {
+        params.fromVersion = fromVersion;
       }
-
-      const devices = await fetchFromGeotab("Get", params, credentials);
-
-      if (devices && devices.length > 0) {
-        allResults.push(...devices);
-
-        if (devices.length < resultsLimit) {
-          break; // This was the last page
+      const response = await fetchFromGeotabFeed("Get", params, credentials);
+      
+      if (response.data && response.data.length > 0) {
+        allResults.push(...response.data);
+        if (!response.toVersion || response.toVersion === fromVersion) {
+          break;
         }
-        
-        const lastDevice = devices[devices.length - 1];
-        offsetName = lastDevice.name;
-        lastId = lastDevice.id;
+        fromVersion = response.toVersion;
       } else {
-        break; // No more results found
+        break;
       }
     }
     return allResults;
+  }
+
+  /**
+   * Helper that returns the full API result, including the version token.
+   */
+  async function fetchFromGeotabFeed(method, params, credentials) {
+    const response = await fetch("https://my.geotab.com/apiv1", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ method, params: { ...params, credentials } }),
+    });
+    if (!response.ok) throw new Error(`API call failed: ${response.statusText}`);
+    const json = await response.json();
+    if (json.error) throw new Error(json.error.message || "Unknown API error");
+    return {
+      data: json.result || [],
+      toVersion: json.toVersion || null
+    };
   }
 
   /**
@@ -174,23 +178,36 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /**
-   * 🚗 Fetches and aggregates trip data for the current day in the user's timezone.
+   * ✨ Fetches and aggregates trip data by making smaller calls for each vehicle.
    */
   async function loadDailyTripData(timeZoneId) {
     const { fromDate, toDate } = getDateRangeInUTCForToday(timeZoneId);
-
-    const trips = await fetchFromGeotab("Get", {
-      typeName: "Trip",
-      search: { fromDate, toDate }
-    }, credentials);
-
     const distanceByDevice = new Map();
-    for (const trip of trips) {
-      if (!trip.device) continue;
-      const deviceId = trip.device.id;
-      const currentDistance = distanceByDevice.get(deviceId) || 0;
-      distanceByDevice.set(deviceId, currentDistance + trip.distance);
-    }
+
+    // Create an array of API call promises, one for each device
+    const tripPromises = allDevices.map(device => 
+      fetchFromGeotab("Get", {
+        typeName: "Trip",
+        search: { 
+          deviceSearch: { id: device.id },
+          fromDate, 
+          toDate 
+        }
+      }, credentials)
+    );
+
+    // Execute all promises concurrently
+    const allTripResults = await Promise.all(tripPromises);
+
+    // Process the results from all calls
+    allTripResults.forEach(deviceTrips => {
+      if (deviceTrips.length > 0) {
+        const deviceId = deviceTrips[0].device.id;
+        const totalDistance = deviceTrips.reduce((sum, trip) => sum + trip.distance, 0);
+        distanceByDevice.set(deviceId, totalDistance);
+      }
+    });
+    
     return distanceByDevice;
   }
 
@@ -203,7 +220,7 @@ document.addEventListener("DOMContentLoaded", () => {
         typeName: "DeviceStatusInfo",
         search: {
           deviceSearch: {
-            fromDate: new Date().toISOString(),
+            nowDate: new Date(),
             excludeUntrackedAssets: true
           }
         }
