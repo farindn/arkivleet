@@ -64,49 +64,52 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /**
-   * ✨ Updated function to retrieve all devices using sort/offset pagination.
+   * ✨ Retrieves all active devices using pagination.
    */
   async function fetchAllDevices(credentials) {
     let allResults = [];
-    const resultsLimit = 5000; // Fetch in chunks of 5000
-    let lastName = null;
-    let lastId = null;
-
+    let fromVersion = null;
     while (true) {
       const params = {
         typeName: "Device",
         search: {
-          fromDate: new Date().toISOString()
-        },
-        resultsLimit: resultsLimit,
-        sort: {
-          sortBy: "name",
-          sortDirection: "asc"
+          nowDate: new Date() // ✨ Using nowDate to get all active devices.
         }
       };
-
-      if (lastName !== null) {
-        params.sort.offset = lastName;
-        params.sort.lastId = lastId;
+      if (fromVersion) {
+        params.fromVersion = fromVersion;
       }
-
-      const devices = await fetchFromGeotab("Get", params, credentials);
-
-      if (devices && devices.length > 0) {
-        allResults.push(...devices);
-
-        if (devices.length < resultsLimit) {
-          break; // Last page
+      const response = await fetchFromGeotabFeed("Get", params, credentials);
+      
+      if (response.data && response.data.length > 0) {
+        allResults.push(...response.data);
+        if (!response.toVersion || response.toVersion === fromVersion) {
+          break;
         }
-        
-        const lastDevice = devices[devices.length - 1];
-        lastName = lastDevice.name;
-        lastId = lastDevice.id;
+        fromVersion = response.toVersion;
       } else {
-        break; // No more results
+        break;
       }
     }
     return allResults;
+  }
+
+  /**
+   * Helper that returns the full API result, including the version token.
+   */
+  async function fetchFromGeotabFeed(method, params, credentials) {
+    const response = await fetch("https://my.geotab.com/apiv1", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ method, params: { ...params, credentials } }),
+    });
+    if (!response.ok) throw new Error(`API call failed: ${response.statusText}`);
+    const json = await response.json();
+    if (json.error) throw new Error(json.error.message || "Unknown API error");
+    return {
+      data: json.result || [],
+      toVersion: json.toVersion || null
+    };
   }
 
   /**
@@ -203,6 +206,7 @@ document.addEventListener("DOMContentLoaded", () => {
         typeName: "DeviceStatusInfo",
         search: {
           deviceSearch: {
+            nowDate: new Date(), // ✨ Using nowDate for consistency.
             excludeUntrackedAssets: true
           }
         }
