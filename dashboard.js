@@ -73,7 +73,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const params = {
         typeName: "Device",
         search: {
-          fromDate: new Date() // ✨ Using nowDate to get all active devices.
+          activeTo: null // ✨ Using activeTo: null to get non-archived devices.
         }
       };
       if (fromVersion) {
@@ -206,7 +206,7 @@ document.addEventListener("DOMContentLoaded", () => {
         typeName: "DeviceStatusInfo",
         search: {
           deviceSearch: {
-            nowDate: new Date(), // ✨ Using nowDate for consistency.
+            activeTo: null, // ✨ Using activeTo: null for consistency.
             excludeUntrackedAssets: true
           }
         }
