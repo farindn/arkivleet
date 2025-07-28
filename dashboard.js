@@ -64,11 +64,11 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /**
-   * ✨ Retrieves all devices using sort/offset pagination as specified.
+   * ✨ Corrected function to retrieve all devices using sort/offset pagination.
    */
   async function fetchAllDevices(credentials) {
     let allResults = [];
-    const resultsLimit = 5000;
+    const resultsLimit = 5000; // Fetch in chunks of 5000
     let offsetName = null;
     let lastId = null;
 
@@ -96,14 +96,14 @@ document.addEventListener("DOMContentLoaded", () => {
         allResults.push(...devices);
 
         if (devices.length < resultsLimit) {
-          break; // Last page
+          break; // This was the last page
         }
         
         const lastDevice = devices[devices.length - 1];
         offsetName = lastDevice.name;
         lastId = lastDevice.id;
       } else {
-        break; // No more results
+        break; // No more results found
       }
     }
     return allResults;
