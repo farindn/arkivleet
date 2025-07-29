@@ -41,13 +41,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       document.getElementById("user-timezone").textContent = userTimeZoneId;
 
-      const rawDeviceList = await fetchAllDevices(credentials);
-      
-      allDevices = rawDeviceList.filter(device => {
-        const activeToDate = new Date(device.activeTo);
-        return activeToDate.getUTCFullYear() < 2000;
-      });
-      
+      allDevices = await fetchAllDevices(credentials);
       document.getElementById("card-total").textContent = allDevices.length;
       
       dailyTripData = await loadDailyTripData(userTimeZoneId);
@@ -55,7 +49,7 @@ document.addEventListener("DOMContentLoaded", () => {
       setupTableControls();
       await renderTablePage(1);
       
-      await loadFleetSummary(); // ✨ Wait for card data to be calculated
+      loadFleetSummary();
       setupCardListeners();
       setupDetailsButtonListener();
 
@@ -69,50 +63,49 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /**
-   * Retrieves all active devices using pagination.
+   * ✨ Retrieves all devices using sort/offset pagination as specified.
    */
   async function fetchAllDevices(credentials) {
     let allResults = [];
-    let fromVersion = null;
+    const resultsLimit = 5000;
+    let offsetName = null;
+    let lastId = null;
+
     while (true) {
       const params = {
         typeName: "Device",
-        resultsLimit: 5000
-      };
-      if (fromVersion) {
-        params.fromVersion = fromVersion;
-      }
-      const response = await fetchFromGeotabFeed("Get", params, credentials);
-      
-      if (response.data && response.data.length > 0) {
-        allResults.push(...response.data);
-        if (!response.toVersion || response.toVersion === fromVersion) {
-          break;
+        search: {
+          fromDate: new Date().toISOString()
+        },
+        resultsLimit: resultsLimit,
+        sort: {
+          sortBy: "name",
+          sortDirection: "asc"
         }
-        fromVersion = response.toVersion;
+      };
+
+      if (offsetName !== null) {
+        params.sort.offset = offsetName;
+        params.sort.lastId = lastId;
+      }
+
+      const devices = await fetchFromGeotab("Get", params, credentials);
+
+      if (devices && devices.length > 0) {
+        allResults.push(...devices);
+
+        if (devices.length < resultsLimit) {
+          break; // This was the last page
+        }
+        
+        const lastDevice = devices[devices.length - 1];
+        offsetName = lastDevice.name;
+        lastId = lastDevice.id;
       } else {
-        break;
+        break; // No more results
       }
     }
     return allResults;
-  }
-
-  /**
-   * Helper that returns the full API result, including the version token.
-   */
-  async function fetchFromGeotabFeed(method, params, credentials) {
-    const response = await fetch("https://my.geotab.com/apiv1", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ method, params: { ...params, credentials } }),
-    });
-    if (!response.ok) throw new Error(`API call failed: ${response.statusText}`);
-    const json = await response.json();
-    if (json.error) throw new Error(json.error.message || "Unknown API error");
-    return {
-      data: json.result || [],
-      toVersion: json.toVersion || null
-    };
   }
 
   /**
@@ -136,8 +129,10 @@ document.addEventListener("DOMContentLoaded", () => {
   function setupNavbar() {
     document.getElementById("user-email").textContent = credentials.userName;
     document.getElementById("user-db").textContent = credentials.database;
+    
     document.getElementById("dropdown-user-email").textContent = credentials.userName;
     document.getElementById("dropdown-user-db").textContent = credentials.database;
+
     const userArea = document.getElementById("userArea");
     const dropdown = document.getElementById("dropdownMenu");
     userArea.addEventListener("click", () => dropdown.classList.toggle("hidden"));
@@ -154,17 +149,23 @@ document.addEventListener("DOMContentLoaded", () => {
     const now = new Date();
     const parts = new Intl.DateTimeFormat("en-CA", { timeZone: timeZoneId }).formatToParts(now);
     const { year, month, day } = parts.reduce((acc, p) => ({ ...acc, [p.type]: p.value }), {});
+
     const midnightString = `${year}-${month}-${day}T00:00:00`;
     const anchorDate = new Date(midnightString + "Z");
+    
     const hourInZone = new Intl.DateTimeFormat("en-US", {
       timeZone: timeZoneId,
       hour: "numeric",
       hourCycle: "h23",
     }).format(anchorDate);
+
     const offsetInHours = 0 - parseInt(hourInZone, 10);
+
     const fromDate = new Date(anchorDate);
     fromDate.setUTCHours(fromDate.getUTCHours() + offsetInHours);
+
     const toDate = new Date(fromDate.getTime() + (24 * 60 * 60 * 1000 - 1));
+
     return { 
       fromDate: fromDate.toISOString(), 
       toDate: toDate.toISOString() 
