@@ -41,19 +41,15 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       document.getElementById("user-timezone").textContent = userTimeZoneId;
 
-      // ✨ Step 1: Fetch ALL devices (active and archived)
       const rawDeviceList = await fetchAllDevices(credentials);
       
-      // ✨ Step 2: Filter for ONLY active devices on the client-side
       allDevices = rawDeviceList.filter(device => {
         const activeToDate = new Date(device.activeTo);
-        // Geotab's default 'activeTo' for non-archived devices is a date in the year 1.
         return activeToDate.getUTCFullYear() < 2000;
       });
       
       document.getElementById("card-total").textContent = allDevices.length;
       
-      // Step 3: Fetch trip data for our active devices
       dailyTripData = await loadDailyTripData(userTimeZoneId);
       
       setupTableControls();
@@ -73,13 +69,16 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /**
-   * ✨ Corrected function to retrieve ALL devices using pagination, without a search filter.
+   * ✨ Corrected function to retrieve ALL devices using pagination.
    */
   async function fetchAllDevices(credentials) {
     let allResults = [];
     let fromVersion = null;
     while (true) {
-      const params = { typeName: "Device" };
+      const params = {
+        typeName: "Device",
+        resultsLimit: 5000 // ✨ Added resultsLimit to prevent timeouts
+      };
       if (fromVersion) {
         params.fromVersion = fromVersion;
       }
@@ -137,10 +136,8 @@ document.addEventListener("DOMContentLoaded", () => {
   function setupNavbar() {
     document.getElementById("user-email").textContent = credentials.userName;
     document.getElementById("user-db").textContent = credentials.database;
-    
     document.getElementById("dropdown-user-email").textContent = credentials.userName;
     document.getElementById("dropdown-user-db").textContent = credentials.database;
-
     const userArea = document.getElementById("userArea");
     const dropdown = document.getElementById("dropdownMenu");
     userArea.addEventListener("click", () => dropdown.classList.toggle("hidden"));
@@ -157,23 +154,17 @@ document.addEventListener("DOMContentLoaded", () => {
     const now = new Date();
     const parts = new Intl.DateTimeFormat("en-CA", { timeZone: timeZoneId }).formatToParts(now);
     const { year, month, day } = parts.reduce((acc, p) => ({ ...acc, [p.type]: p.value }), {});
-
     const midnightString = `${year}-${month}-${day}T00:00:00`;
     const anchorDate = new Date(midnightString + "Z");
-    
     const hourInZone = new Intl.DateTimeFormat("en-US", {
       timeZone: timeZoneId,
       hour: "numeric",
       hourCycle: "h23",
     }).format(anchorDate);
-
     const offsetInHours = 0 - parseInt(hourInZone, 10);
-
     const fromDate = new Date(anchorDate);
     fromDate.setUTCHours(fromDate.getUTCHours() + offsetInHours);
-
     const toDate = new Date(fromDate.getTime() + (24 * 60 * 60 * 1000 - 1));
-
     return { 
       fromDate: fromDate.toISOString(), 
       toDate: toDate.toISOString() 
@@ -214,7 +205,6 @@ document.addEventListener("DOMContentLoaded", () => {
   async function loadFleetSummary() {
     try {
       if (allDevices.length === 0) return;
-      // ✨ Fetch statuses for only the active devices to ensure consistency.
       const deviceIds = allDevices.map(d => ({ id: d.id }));
       const statusInfo = await fetchFromGeotab("Get", {
         typeName: "DeviceStatusInfo",
