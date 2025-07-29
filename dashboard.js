@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
     database: sessionStorage.getItem("database"),
   };
 
-  let allDevices = [];
+  let allDevices = []; // This will hold ONLY active devices
   let dailyTripData = new Map();
   let fullStatusData = [];
   let userTimeZoneId = "UTC";
@@ -41,11 +41,20 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       document.getElementById("user-timezone").textContent = userTimeZoneId;
 
-      // ✨ Fetch devices first, as trip data depends on it
-      allDevices = await fetchAllDevices(credentials);
+      // ✨ Step 1: Fetch ALL devices (active and archived)
+      const rawDeviceList = await fetchAllDevices(credentials);
+      
+      // ✨ Step 2: Filter for ONLY active devices on the client-side
+      allDevices = rawDeviceList.filter(device => {
+        const activeToDate = new Date(device.activeTo);
+        // Geotab's default 'activeTo' for active devices is the year 1.
+        // Any real archived date will have a modern year.
+        return activeToDate.getUTCFullYear() < 2000;
+      });
+
       document.getElementById("card-total").textContent = allDevices.length;
       
-      // ✨ Now fetch trip data
+      // Step 3: Fetch trip data for our active devices
       dailyTripData = await loadDailyTripData(userTimeZoneId);
       
       setupTableControls();
@@ -65,18 +74,14 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /**
-   * Retrieves all active devices using pagination.
+   * ✨ Corrected function to retrieve ALL devices (active and archived) using pagination.
    */
   async function fetchAllDevices(credentials) {
     let allResults = [];
     let fromVersion = null;
     while (true) {
-      const params = {
-        typeName: "Device",
-        search: {
-          nowDate: new Date()
-        }
-      };
+      // Fetch without any search parameters to make pagination work
+      const params = { typeName: "Device" };
       if (fromVersion) {
         params.fromVersion = fromVersion;
       }
@@ -134,10 +139,8 @@ document.addEventListener("DOMContentLoaded", () => {
   function setupNavbar() {
     document.getElementById("user-email").textContent = credentials.userName;
     document.getElementById("user-db").textContent = credentials.database;
-    
     document.getElementById("dropdown-user-email").textContent = credentials.userName;
     document.getElementById("dropdown-user-db").textContent = credentials.database;
-
     const userArea = document.getElementById("userArea");
     const dropdown = document.getElementById("dropdownMenu");
     userArea.addEventListener("click", () => dropdown.classList.toggle("hidden"));
@@ -154,23 +157,17 @@ document.addEventListener("DOMContentLoaded", () => {
     const now = new Date();
     const parts = new Intl.DateTimeFormat("en-CA", { timeZone: timeZoneId }).formatToParts(now);
     const { year, month, day } = parts.reduce((acc, p) => ({ ...acc, [p.type]: p.value }), {});
-
     const midnightString = `${year}-${month}-${day}T00:00:00`;
     const anchorDate = new Date(midnightString + "Z");
-    
     const hourInZone = new Intl.DateTimeFormat("en-US", {
       timeZone: timeZoneId,
       hour: "numeric",
       hourCycle: "h23",
     }).format(anchorDate);
-
     const offsetInHours = 0 - parseInt(hourInZone, 10);
-
     const fromDate = new Date(anchorDate);
     fromDate.setUTCHours(fromDate.getUTCHours() + offsetInHours);
-
     const toDate = new Date(fromDate.getTime() + (24 * 60 * 60 * 1000 - 1));
-
     return { 
       fromDate: fromDate.toISOString(), 
       toDate: toDate.toISOString() 
@@ -178,13 +175,11 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /**
-   * ✨ Fetches and aggregates trip data by making smaller calls for each vehicle.
+   * 🚗 Fetches and aggregates trip data for the current day in the user's timezone.
    */
   async function loadDailyTripData(timeZoneId) {
     const { fromDate, toDate } = getDateRangeInUTCForToday(timeZoneId);
     const distanceByDevice = new Map();
-
-    // Create an array of API call promises, one for each device
     const tripPromises = allDevices.map(device => 
       fetchFromGeotab("Get", {
         typeName: "Trip",
@@ -195,11 +190,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }, credentials)
     );
-
-    // Execute all promises concurrently
     const allTripResults = await Promise.all(tripPromises);
-
-    // Process the results from all calls
     allTripResults.forEach(deviceTrips => {
       if (deviceTrips.length > 0) {
         const deviceId = deviceTrips[0].device.id;
@@ -207,28 +198,28 @@ document.addEventListener("DOMContentLoaded", () => {
         distanceByDevice.set(deviceId, totalDistance);
       }
     });
-    
     return distanceByDevice;
   }
 
   /**
-   * 📈 Asynchronously fetches status for the entire fleet to update summary cards.
+   * 📈 Asynchronously fetches status for the active fleet to update summary cards.
    */
   async function loadFleetSummary() {
     try {
+      // ✨ Fetch statuses for only the active devices to ensure consistency.
+      const deviceIds = allDevices.map(d => ({ id: d.id }));
       const statusInfo = await fetchFromGeotab("Get", {
         typeName: "DeviceStatusInfo",
         search: {
           deviceSearch: {
-            nowDate: new Date(),
-            excludeUntrackedAssets: true
-          }
+            ids: deviceIds
+          },
+          excludeUntrackedAssets: true
         }
       }, credentials);
       fullStatusData = statusInfo;
       
       const communicatingDevices = statusInfo.filter(s => s.isDeviceCommunicating);
-      
       let lessUtilizedCount = 0;
       for (const device of communicatingDevices) {
         const distance = dailyTripData.get(device.device.id) || 0;
@@ -253,18 +244,15 @@ document.addEventListener("DOMContentLoaded", () => {
     showLoader();
     try {
       const filteredDevices = getFilteredAndSortedDevices();
-      
       const total = filteredDevices.length;
       const start = total > 0 ? (page - 1) * rowsPerPage + 1 : 0;
       const end = Math.min(start + rowsPerPage - 1, total);
       document.getElementById('table-info-text').textContent = `Showing ${start} - ${end} of ${total}`;
-      
       const pageInfo = {
         totalItems: total,
         totalPages: Math.ceil(total / rowsPerPage),
         currentPage: page
       };
-      
       const pageDevices = filteredDevices.slice(start - 1, end);
       
       if (pageDevices.length === 0 && total > 0) {
@@ -283,7 +271,6 @@ document.addEventListener("DOMContentLoaded", () => {
           search: { deviceSearch: { ids: deviceIds } }
       }, credentials);
       const statusMap = Object.fromEntries(statusList.map(s => [s.device.id, s]));
-      
       const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
         timeZone: userTimeZoneId,
         month: 'short',
@@ -292,56 +279,23 @@ document.addEventListener("DOMContentLoaded", () => {
         minute: '2-digit',
         hour12: true,
       });
-
       const tableBody = document.getElementById("vehicle-table-body");
       tableBody.innerHTML = "";
       pageDevices.forEach(device => {
         const status = statusMap[device.id] || {};
         const distanceToday = dailyTripData.get(device.id) || 0;
         const serialNumber = device.serialNumber || "-";
-
         const isCommunicating = status.isDeviceCommunicating;
         const updateIcon = isCommunicating ? 'wifi' : 'wifi_off';
         const updateColorClass = isCommunicating ? 'update-fresh' : 'update-stale';
         const formattedDateTime = status.dateTime ? dateTimeFormatter.format(new Date(status.dateTime)) : "N/A";
-        
         const statusIconHTML = `<span class="material-symbols-rounded ${updateColorClass}">${updateIcon}</span>`;
-
-        const actionButtonHTML = `
-          <button class="btn-action" data-id="${device.id}">
-            Details
-            <span class="material-symbols-rounded">arrow_forward_ios</span>
-          </button>
-        `;
-
+        const actionButtonHTML = `<button class="btn-action" data-id="${device.id}">Details<span class="material-symbols-rounded">arrow_forward_ios</span></button>`;
         const row = document.createElement("tr");
         row.classList.add("fade-in");
-        
-        row.innerHTML = `
-            <td class="status-col">${statusIconHTML}</td>
-            <td>
-              <div class="mobile-view">
-                <div class="mobile-view-info">
-                  <div class="vehicle-name">${device.name || "Unknown"}</div>
-                  <div class="vehicle-serial"><code class="code-block">${serialNumber}</code></div>
-                  <div class="vehicle-last-update">
-                    <span class="material-symbols-rounded ${updateColorClass}">${updateIcon}</span>
-                    <span class="${updateColorClass}">${formattedDateTime}</span>
-                  </div>
-                </div>
-                ${actionButtonHTML}
-              </div>
-              <span class="desktop-view">${device.name || "Unknown"}</span>
-            </td>
-            <td><code class="code-block">${device.vehicleIdentificationNumber || "-"}</code></td>
-            <td><code class="code-block">${serialNumber}</code></td>
-            <td>${status.isDriving ? 'Yes' : 'No'}</td>
-            <td><code class="code-block">${distanceToday.toFixed(2)}</code></td>
-            <td>${actionButtonHTML}</td>
-        `;
+        row.innerHTML = `<td class="status-col">${statusIconHTML}</td><td><div class="mobile-view"><div class="mobile-view-info"><div class="vehicle-name">${device.name || "Unknown"}</div><div class="vehicle-serial"><code class="code-block">${serialNumber}</code></div><div class="vehicle-last-update"><span class="material-symbols-rounded ${updateColorClass}">${updateIcon}</span><span class="${updateColorClass}">${formattedDateTime}</span></div></div>${actionButtonHTML}</div><span class="desktop-view">${device.name || "Unknown"}</span></td><td><code class="code-block">${device.vehicleIdentificationNumber || "-"}</code></td><td><code class="code-block">${serialNumber}</code></td><td>${status.isDriving ? 'Yes' : 'No'}</td><td><code class="code-block">${distanceToday.toFixed(2)}</code></td><td>${actionButtonHTML}</td>`;
         tableBody.appendChild(row);
       });
-      
       updatePaginationControls(pageInfo);
     } catch (err) {
       console.error(`Error rendering page ${page}:`, err);
@@ -420,15 +374,12 @@ document.addEventListener("DOMContentLoaded", () => {
   function updatePaginationControls({ currentPage, totalPages }) {
     const prevBtn = document.getElementById("prevPage");
     const nextBtn = document.getElementById("nextPage");
-    
     prevBtn.disabled = currentPage <= 1;
     nextBtn.disabled = currentPage >= totalPages;
-
     const newPrevBtn = prevBtn.cloneNode(true);
     prevBtn.parentNode.replaceChild(newPrevBtn, prevBtn);
     const newNextBtn = nextBtn.cloneNode(true);
     nextBtn.parentNode.replaceChild(newNextBtn, nextBtn);
-    
     if (currentPage > 1) {
         newPrevBtn.addEventListener("click", () => renderTablePage(currentPage - 1));
     }
@@ -442,14 +393,11 @@ document.addEventListener("DOMContentLoaded", () => {
    */
   function getFilteredAndSortedDevices() {
     let baseList = [...allDevices];
-
-    // 1. Apply active card filter
     if (activeFilter !== 'all') {
       const statusMap = new Map(fullStatusData.map(s => [s.device.id, s]));
       const communicatingDeviceIds = new Set(
         fullStatusData.filter(s => s.isDeviceCommunicating).map(s => s.device.id)
       );
-
       if (activeFilter === 'communicating') {
         baseList = allDevices.filter(d => communicatingDeviceIds.has(d.id));
       } else if (activeFilter === 'driving') {
@@ -460,8 +408,6 @@ document.addEventListener("DOMContentLoaded", () => {
         );
       }
     }
-
-    // 2. Apply search term filter
     let filtered = [...baseList];
     if (currentSearchTerm) {
       const lowercasedTerm = currentSearchTerm.toLowerCase();
@@ -471,8 +417,6 @@ document.addEventListener("DOMContentLoaded", () => {
         (d.serialNumber || "").toLowerCase().includes(lowercasedTerm)
       );
     }
-
-    // 3. Sort the results
     filtered.sort((a, b) => {
         const valA = a[currentSortConfig.column]?.toLowerCase?.() || a[currentSortConfig.column] || "";
         const valB = b[currentSortConfig.column]?.toLowerCase?.() || b[currentSortConfig.column] || "";
@@ -480,7 +424,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (valA > valB) return currentSortConfig.direction === 'asc' ? 1 : -1;
         return 0;
     });
-    
     return filtered;
   }
 });
