@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
     database: sessionStorage.getItem("database"),
   };
 
-  let allDevices = []; // Will hold ONLY active devices
+  let allDevices = [];
   let dailyTripData = new Map();
   let fullStatusData = [];
   let userTimeZoneId = "UTC";
@@ -22,7 +22,6 @@ document.addEventListener("DOMContentLoaded", () => {
    * 🚀 Main function to initialize the dashboard.
    */
   async function initializeDashboard() {
-    console.log("🚀 Initializing dashboard...");
     if (!credentials.sessionId) {
       showToast("Session expired. Please log in again.", "error");
       setTimeout(() => (window.location.href = "index.html"), 2000);
@@ -33,7 +32,6 @@ document.addEventListener("DOMContentLoaded", () => {
     showLoader();
 
     try {
-      console.log("👤 Fetching user timezone...");
       const userResult = await fetchFromGeotab("Get", {
         typeName: "User",
         search: { name: credentials.userName },
@@ -42,37 +40,18 @@ document.addEventListener("DOMContentLoaded", () => {
         userTimeZoneId = userResult[0].timeZoneId;
       }
       document.getElementById("user-timezone").textContent = userTimeZoneId;
-      console.log("✅ User timezone fetched:", userTimeZoneId);
 
-      console.log("🚗 Fetching all devices (this may take a moment for large fleets)...");
-      const rawDeviceList = await fetchAllDevices(credentials);
-      console.log(`👍 Raw device list fetched: ${rawDeviceList.length} total devices (including archived).`);
-      
-      allDevices = rawDeviceList.filter(device => {
-        const activeToDate = new Date(device.activeTo);
-        return activeToDate.getUTCFullYear() < 2000;
-      });
-      console.log(`✅ Active device list created: ${allDevices.length} active devices.`);
-      
+      allDevices = await fetchAllDevices(credentials);
       document.getElementById("card-total").textContent = allDevices.length;
       
-      console.log("📈 Fetching trip data for all active devices...");
       dailyTripData = await loadDailyTripData(userTimeZoneId);
-      console.log("✅ Trip data loaded.");
       
       setupTableControls();
-      console.log("✍️ Rendering vehicle list table...");
       await renderTablePage(1);
-      console.log("✅ Table rendered.");
       
-      console.log("📊 Loading summary card data...");
       loadFleetSummary();
-      console.log("✅ Summary card data loading in background.");
-      
       setupCardListeners();
       setupDetailsButtonListener();
-      
-      console.log("🎉 Dashboard initialization complete.");
 
     } catch (err) {
       console.error("Error initializing dashboard:", err);
@@ -84,55 +63,49 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /**
-   * ✨ Retrieves all active devices using pagination.
+   * Retrieves all devices using sort/offset pagination.
    */
   async function fetchAllDevices(credentials) {
-    console.log("  [fetchAllDevices] Starting pagination to fetch all devices...");
     let allResults = [];
-    let fromVersion = null;
-    let page = 1;
+    const resultsLimit = 5000;
+    let offsetName = null;
+    let lastId = null;
+
     while (true) {
-      console.log(`  [fetchAllDevices] Fetching page ${page}...`);
       const params = {
         typeName: "Device",
-        resultsLimit: 5000
+        search: {
+          fromDate: new Date().toISOString()
+        },
+        resultsLimit: resultsLimit,
+        sort: {
+          sortBy: "name",
+          sortDirection: "asc"
+        }
       };
-      if (fromVersion) {
-        params.fromVersion = fromVersion;
+
+      if (offsetName !== null) {
+        params.sort.offset = offsetName;
+        params.sort.lastId = lastId;
       }
-      const response = await fetchFromGeotabFeed("Get", params, credentials);
-      
-      if (response.data && response.data.length > 0) {
-        allResults.push(...response.data);
-        if (!response.toVersion || response.toVersion === fromVersion) {
+
+      const devices = await fetchFromGeotab("Get", params, credentials);
+
+      if (devices && devices.length > 0) {
+        allResults.push(...devices);
+
+        if (devices.length < resultsLimit) {
           break;
         }
-        fromVersion = response.toVersion;
-        page++;
+        
+        const lastDevice = devices[devices.length - 1];
+        offsetName = lastDevice.name;
+        lastId = lastDevice.id;
       } else {
         break;
       }
     }
-    console.log(`  [fetchAllDevices] Finished. Total raw devices found: ${allResults.length}`);
     return allResults;
-  }
-
-  /**
-   * Helper that returns the full API result, including the version token.
-   */
-  async function fetchFromGeotabFeed(method, params, credentials) {
-    const response = await fetch("https://my.geotab.com/apiv1", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ method, params: { ...params, credentials } }),
-    });
-    if (!response.ok) throw new Error(`API call failed: ${response.statusText}`);
-    const json = await response.json();
-    if (json.error) throw new Error(json.error.message || "Unknown API error");
-    return {
-      data: json.result || [],
-      toVersion: json.toVersion || null
-    };
   }
 
   /**
@@ -156,8 +129,10 @@ document.addEventListener("DOMContentLoaded", () => {
   function setupNavbar() {
     document.getElementById("user-email").textContent = credentials.userName;
     document.getElementById("user-db").textContent = credentials.database;
+    
     document.getElementById("dropdown-user-email").textContent = credentials.userName;
     document.getElementById("dropdown-user-db").textContent = credentials.database;
+
     const userArea = document.getElementById("userArea");
     const dropdown = document.getElementById("dropdownMenu");
     userArea.addEventListener("click", () => dropdown.classList.toggle("hidden"));
@@ -174,17 +149,23 @@ document.addEventListener("DOMContentLoaded", () => {
     const now = new Date();
     const parts = new Intl.DateTimeFormat("en-CA", { timeZone: timeZoneId }).formatToParts(now);
     const { year, month, day } = parts.reduce((acc, p) => ({ ...acc, [p.type]: p.value }), {});
+
     const midnightString = `${year}-${month}-${day}T00:00:00`;
     const anchorDate = new Date(midnightString + "Z");
+    
     const hourInZone = new Intl.DateTimeFormat("en-US", {
       timeZone: timeZoneId,
       hour: "numeric",
       hourCycle: "h23",
     }).format(anchorDate);
+
     const offsetInHours = 0 - parseInt(hourInZone, 10);
+
     const fromDate = new Date(anchorDate);
     fromDate.setUTCHours(fromDate.getUTCHours() + offsetInHours);
+
     const toDate = new Date(fromDate.getTime() + (24 * 60 * 60 * 1000 - 1));
+
     return { 
       fromDate: fromDate.toISOString(), 
       toDate: toDate.toISOString() 
@@ -192,15 +173,16 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /**
-   * 🚗 Fetches and aggregates trip data in batches.
+   * ✨ Fetches and aggregates trip data in batches to prevent resource errors.
    */
   async function loadDailyTripData(timeZoneId) {
-    console.log("  [loadDailyTripData] Starting to fetch trips in batches...");
     if (allDevices.length === 0) return new Map();
 
     const { fromDate, toDate } = getDateRangeInUTCForToday(timeZoneId);
     const distanceByDevice = new Map();
-    const batchSize = 100;
+    const batchSize = 100; // Process 100 devices at a time
+
+    console.log(`📈 Starting to fetch trip data in batches of ${batchSize}...`);
 
     for (let i = 0; i < allDevices.length; i += batchSize) {
       const batch = allDevices.slice(i, i + batchSize);
@@ -225,10 +207,10 @@ document.addEventListener("DOMContentLoaded", () => {
           distanceByDevice.set(deviceId, totalDistance);
         }
       });
-      console.log(`  [loadDailyTripData] Processed batch ${Math.floor(i / batchSize) + 1} of ${Math.ceil(allDevices.length / batchSize)}...`);
+      console.log(`  Processed batch ${Math.floor(i / batchSize) + 1} of ${Math.ceil(allDevices.length / batchSize)}...`);
     }
     
-    console.log("  [loadDailyTripData] Finished fetching all trips.");
+    console.log("✅ Finished fetching all trip data.");
     return distanceByDevice;
   }
 
