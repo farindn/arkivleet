@@ -63,49 +63,51 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /**
-   * ✨ Retrieves all devices using sort/offset pagination as specified.
+   * ✨ Retrieves all active devices using pagination.
    */
   async function fetchAllDevices(credentials) {
     let allResults = [];
-    const resultsLimit = 5000;
-    let offsetName = null;
-    let lastId = null;
-
+    let fromVersion = null;
     while (true) {
       const params = {
         typeName: "Device",
-        search: {
-          fromDate: new Date().toISOString()
-        },
-        resultsLimit: resultsLimit,
-        sort: {
-          sortBy: "name",
-          sortDirection: "asc"
-        }
+        resultsLimit: 5000
       };
-
-      if (offsetName !== null) {
-        params.sort.offset = offsetName;
-        params.sort.lastId = lastId;
+      if (fromVersion) {
+        params.fromVersion = fromVersion;
       }
-
-      const devices = await fetchFromGeotab("Get", params, credentials);
-
-      if (devices && devices.length > 0) {
-        allResults.push(...devices);
-
-        if (devices.length < resultsLimit) {
-          break; // This was the last page
+      const response = await fetchFromGeotabFeed("Get", params, credentials);
+      
+      if (response.data && response.data.length > 0) {
+        allResults.push(...response.data);
+        if (!response.toVersion || response.toVersion === fromVersion) {
+          break;
         }
-        
-        const lastDevice = devices[devices.length - 1];
-        offsetName = lastDevice.name;
-        lastId = lastDevice.id;
+        fromVersion = response.toVersion;
       } else {
-        break; // No more results
+        break;
       }
     }
-    return allResults;
+    // Filter for active devices after fetching all data
+    return allResults.filter(device => new Date(device.activeTo).getUTCFullYear() < 2000);
+  }
+
+  /**
+   * Helper that returns the full API result, including the version token.
+   */
+  async function fetchFromGeotabFeed(method, params, credentials) {
+    const response = await fetch("https://my.geotab.com/apiv1", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ method, params: { ...params, credentials } }),
+    });
+    if (!response.ok) throw new Error(`API call failed: ${response.statusText}`);
+    const json = await response.json();
+    if (json.error) throw new Error(json.error.message || "Unknown API error");
+    return {
+      data: json.result || [],
+      toVersion: json.toVersion || null
+    };
   }
 
   /**
@@ -173,30 +175,40 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /**
-   * 🚗 Fetches and aggregates trip data for the current day in the user's timezone.
+   * ✨ Fetches and aggregates trip data in batches to prevent resource errors.
    */
   async function loadDailyTripData(timeZoneId) {
     if (allDevices.length === 0) return new Map();
+
     const { fromDate, toDate } = getDateRangeInUTCForToday(timeZoneId);
     const distanceByDevice = new Map();
-    const tripPromises = allDevices.map(device => 
-      fetchFromGeotab("Get", {
-        typeName: "Trip",
-        search: { 
-          deviceSearch: { id: device.id },
-          fromDate, 
-          toDate 
+    const batchSize = 100; // Process 100 devices at a time
+
+    for (let i = 0; i < allDevices.length; i += batchSize) {
+      const batch = allDevices.slice(i, i + batchSize);
+      
+      const tripPromises = batch.map(device => 
+        fetchFromGeotab("Get", {
+          typeName: "Trip",
+          search: { 
+            deviceSearch: { id: device.id },
+            fromDate, 
+            toDate 
+          }
+        }, credentials)
+      );
+
+      const batchTripResults = await Promise.all(tripPromises);
+      
+      batchTripResults.forEach(deviceTrips => {
+        if (deviceTrips.length > 0) {
+          const deviceId = deviceTrips[0].device.id;
+          const totalDistance = deviceTrips.reduce((sum, trip) => sum + trip.distance, 0);
+          distanceByDevice.set(deviceId, totalDistance);
         }
-      }, credentials)
-    );
-    const allTripResults = await Promise.all(tripPromises);
-    allTripResults.forEach(deviceTrips => {
-      if (deviceTrips.length > 0) {
-        const deviceId = deviceTrips[0].device.id;
-        const totalDistance = deviceTrips.reduce((sum, trip) => sum + trip.distance, 0);
-        distanceByDevice.set(deviceId, totalDistance);
-      }
-    });
+      });
+    }
+    
     return distanceByDevice;
   }
 
